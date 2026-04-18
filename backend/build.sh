@@ -4,9 +4,8 @@ set -o errexit
 
 pip install -r requirements.txt
 
-# Install Playwright browser dependencies natively for Linux server
+# Install Playwright browser natively for Linux server
 python -m playwright install chromium
-python -m playwright install-deps chromium
 
 # Django setup
 python manage.py collectstatic --no-input
