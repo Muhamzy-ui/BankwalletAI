@@ -231,42 +231,78 @@ def create_educational_receipt(request):
     try:
         amount = float(amount)
         if amount <= 500000:
-            amount = 501000.0  # Force > 500k
+            amount = 501000.0
     except ValueError:
         amount = 501000.0
 
-    if not channel_id or str(channel_id).lower() in ['test', '0']:
-        image_url = generate_receipt(bank_type, amount, sender_name, receiver_name)
+    # Generate the receipt image first
+    image_url = generate_receipt(bank_type, amount, sender_name, receiver_name)
+    
+    # If no channel specified, return preview only
+    if not channel_id or str(channel_id).lower() in ['test', '0', '']:
         return Response({
             'success': True,
             'image_url': image_url,
             'post_id': None,
-            'message': 'Test receipt generated successfully! (Not queued to any channel)'
+            'message': 'Test receipt generated! (Not queued to any channel)'
         })
-        
+
+    # Build the absolute URL for the image on the server
+    site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+    absolute_image_url = f"{site_url.rstrip('/')}{image_url}"
+
+    # Try to find a registered channel by DB id first
+    channel = None
     try:
-        channel = TelegramChannel.objects.get(id=channel_id, owner=request.user)
-    except TelegramChannel.DoesNotExist:
-        return Response({'error': 'Channel not found'}, status=404)
+        channel = TelegramChannel.objects.get(id=int(channel_id), owner=request.user)
+    except (TelegramChannel.DoesNotExist, ValueError):
+        # Could be a raw Telegram Chat ID (e.g. 8342713750 or -100123456789)
+        # Try to find by channel_id field
+        try:
+            channel = TelegramChannel.objects.get(channel_id=str(channel_id), owner=request.user)
+        except TelegramChannel.DoesNotExist:
+            channel = None
 
-    image_url = generate_receipt(bank_type, amount, sender_name, receiver_name)
+    if channel:
+        # Post via a registered channel
+        post = Post.objects.create(
+            owner=request.user,
+            channel=channel,
+            post_type='photo',
+            media_url=absolute_image_url,
+            caption="",
+            status='queued',
+            scheduled_time=timezone.now()
+        )
+        # Send immediately
+        result = send_post_to_telegram(post, request.user)
+        return Response({
+            'success': True,
+            'image_url': image_url,
+            'post_id': post.id,
+            'message': 'Receipt generated and sent!' if result['success'] else f"Queued but send failed: {result.get('error')}"
+        })
+    else:
+        # Use raw Telegram Chat ID directly without requiring a registered channel
+        try:
+            bot_settings = request.user.bot_settings
+            token = bot_settings.bot_token or settings.TELEGRAM_BOT_TOKEN
+        except Exception:
+            token = settings.TELEGRAM_BOT_TOKEN
 
-    post = Post.objects.create(
-        owner=request.user,
-        channel=channel,
-        post_type='photo',
-        media_url=f"http://localhost:8000{image_url}",
-        caption=f"✅ {bank_type.upper()} Transfer Successful - ₦{amount:,.2f} \n\n Educational Purpose Only.",
-        status='queued',
-        scheduled_time=timezone.now()
-    )
+        if not token:
+            return Response({'error': 'No bot token configured. Go to Bot Settings and save your token.'}, status=400)
 
-    return Response({
-        'success': True,
-        'image_url': image_url,
-        'post_id': post.id,
-        'message': 'Receipt generated and queued for posting.'
-    })
+        resp = requests.post(
+            f"https://api.telegram.org/bot{token}/sendPhoto",
+            json={'chat_id': str(channel_id), 'photo': absolute_image_url, 'caption': ''},
+            timeout=15
+        )
+        data = resp.json()
+        if data.get('ok'):
+            return Response({'success': True, 'image_url': image_url, 'message': 'Receipt sent to Telegram!'})
+        else:
+            return Response({'success': True, 'image_url': image_url, 'message': f"Image generated. Telegram said: {data.get('description', 'unknown error')}"})
 
 
 import glob
