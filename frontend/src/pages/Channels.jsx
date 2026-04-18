@@ -1,0 +1,1 @@
+export default function Channels() { return <div><h1>Manage Channels</h1><div className="glass-panel"><p>Add your Telegram Channels here.</p></div></div>; }

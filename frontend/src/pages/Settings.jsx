@@ -1,0 +1,1 @@
+export default function Settings() { return <div><h1>Bot Settings</h1><div className="glass-panel"><p>Enter your Bot Token and API Keys here.</p></div></div>; }

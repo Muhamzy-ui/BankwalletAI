@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VFD Receipt</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; background-color: #F8F9FB; font-family: 'Roboto', sans-serif; width: 450px; height: 950px; }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 20px; color: #4A5568; font-weight: 500; }
+        .header svg { width: 20px; height: 20px; }
+        .card { background-color: white; border-radius: 20px; margin: 10px 20px; padding: 30px 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .logo-box { width: 50px; height: 50px; background-color: #FEEBC8; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 20px; }
+        .logo-box span { color: #DD6B20; font-size: 24px; font-weight: 700; font-style: italic; }
+        .title { text-align: center; color: #4A5568; font-size: 15px; margin-bottom: 10px; font-weight: 500;}
+        .amount { text-align: center; color: #1A202C; font-size: 32px; font-weight: 700; margin-bottom: 15px;}
+        .badge { background-color: #E6FFFA; color: #04C894; display: flex; align-items: center; justify-content: center; gap: 5px; width: fit-content; margin: 0 auto; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 500;}
+        .badge svg { width: 16px; height: 16px; background: #04C894; color: white; border-radius: 50%; padding: 2px;}
+        
+        .section-title { font-weight: 700; color: #2D3748; margin-top: 30px; margin-bottom: 20px; font-size: 16px; }
+        .row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #EDF2F7; }
+        .label { color: #A0AEC0; font-size: 14px; }
+        .val { color: #2D3748; font-size: 14px; font-weight: 500; text-align: right; }
+        .val-sub { color: #718096; font-size: 12px; margin-top: 4px; font-weight: 400;}
+        
+        .footer-action { margin-top: 30px;}
+        .footer-row { display: flex; justify-content: space-between; margin-top: 15px;}
+        
+        .share-btn { background-color: #01C88F; color: white; width: calc(100% - 40px); margin: 30px 20px; padding: 18px 0; border-radius: 30px; text-align: center; font-weight: 700; font-size: 16px; position: absolute; bottom: 20px;}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        <span>Transaction Details</span>
+        <svg fill="none" stroke="#01C88F" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+    </div>
+
+    <div class="card">
+        <div class="logo-box"><span>V</span></div>
+        <div class="title">Transfer from {{ sender }}</div>
+        <div class="amount">{{ amount }}</div>
+        <div class="badge">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            Successful
+        </div>
+
+        <div class="section-title" style="margin-top: 40px;">Transaction Details</div>
+        
+        <div class="row">
+            <div class="label">Credited to</div>
+            <div class="val">Available Balance ></div>
+        </div>
+        <div class="row">
+            <div class="label">Sender Details</div>
+            <div class="val">
+                {{ sender }}<br>
+                <div class="val-sub">VFD MFB | 104***9101</div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="label">Remark</div>
+            <div class="val">Sent from {{ sender }}</div>
+        </div>
+        <div class="row">
+            <div class="label">Transaction Type</div>
+            <div class="val">Bank Deposit</div>
+        </div>
+        <div class="row">
+            <div class="label">Transaction No.</div>
+            <div class="val" style="display:flex; align-items:center; gap:5px;">{{ txn_id }} <svg width="12" height="12" fill="none" stroke="#A0AEC0" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg></div>
+        </div>
+        <div class="row">
+            <div class="label">Transaction Date</div>
+            <div class="val">{{ date }}</div>
+        </div>
+        <div class="row">
+            <div class="label">Session ID</div>
+            <div class="val" style="display:flex; align-items:center; gap:5px; font-size:13px;">{{ session_id }} <svg width="12" height="12" fill="none" stroke="#A0AEC0" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg></div>
+        </div>
+
+        <div class="footer-action">
+            <div class="section-title">More Actions</div>
+            <div class="footer-row">
+                <div class="label">Category</div>
+                <div class="val">Deposit ></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="share-btn">Share Receipt</div>
+</body>
+</html>

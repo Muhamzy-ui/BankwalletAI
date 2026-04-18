@@ -1,0 +1,1 @@
+export default function Analytics() { return <div><h1>Analytics & Logs</h1><div className="glass-panel"><p>View deep metrics.</p></div></div>; }

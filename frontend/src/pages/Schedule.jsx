@@ -1,0 +1,1 @@
+export default function Schedule() { return <div><h1>Schedule Windows</h1><div className="glass-panel"><p>Configure times when the bot is allowed to post to channels.</p></div></div>; }

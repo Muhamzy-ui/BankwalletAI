@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moniepoint</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #030A14; /* Extremely dark navy/black */
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+            width: 450px;
+            height: 950px;
+            position: relative;
+        }
+        
+        /* Top Navigation */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 25px 25px 15px 25px;
+            font-size: 16px;
+            font-weight: 500;
+            color: white;
+            position: relative;
+        }
+        .header svg { width: 18px; height: 18px; stroke-width: 2.5; position: absolute; left: 25px; color: white;}
+
+        /* Top Balance Card */
+        .top-card {
+            background-color: #0d1726; /* Navy elevated card */
+            margin: 15px 20px;
+            border-radius: 18px;
+            padding: 24px;
+            border: 1px dashed rgba(255,255,255,0.1);
+        }
+        .credit-badge {
+            background-color: #0B2C1C; /* Dark green bg */
+            color: #27d066; /* Bright green text */
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 22px;
+            letter-spacing: 0.2px;
+        }
+        .credit-badge svg {
+            width: 12px; height: 12px; margin-right: 4px; stroke-width: 3;
+        }
+        
+        .amount-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .amount {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .transfer-badge {
+            background-color: #251e12;
+            color: #D6A848;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .date {
+            color: #8c9baf;
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin: 20px 20px 35px 20px;
+        }
+        .action-btn {
+            background-color: #0d1726;
+            border-radius: 12px;
+            padding: 18px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #d1d8e1;
+        }
+        .action-icon {
+            width: 22px;
+            height: 22px;
+        }
+
+        /* Other Details Section */
+        .other-details {
+            margin: 20px 20px;
+        }
+        .od-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 17px;
+            font-weight: 500;
+            margin-bottom: 18px;
+            color: white;
+            padding: 0 5px;
+        }
+        
+        .od-card {
+            background-color: #0d1726;
+            border-radius: 16px;
+            padding: 25px;
+        }
+        .row {
+            margin-bottom: 22px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 22px;
+        }
+        .row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .label {
+            color: #8c9baf;
+            font-size: 13.5px;
+            margin-bottom: 10px;
+            font-weight: 400;
+        }
+        .val {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path></svg>
+        <span>Transaction Details</span>
+    </div>
+
+    <!-- Top Card -->
+    <div class="top-card">
+        <div class="credit-badge">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            CREDIT
+        </div>
+        <div class="amount-row">
+            <div class="amount">{{ amount }}</div>
+            <div class="transfer-badge">TRANSFER</div>
+        </div>
+        <div class="date">{{ date_top }}</div>
+    </div>
+
+    <!-- Actions (Share & Download) -->
+    <div class="actions">
+        <!-- Exact Moniepoint Share Icon -->
+        <div class="action-btn">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="18" cy="6" r="2.5" fill="#F1C250"/>
+                <circle cx="6" cy="12" r="2.5" fill="#F1C250"/>
+                <circle cx="18" cy="18" r="2.5" fill="#F1C250"/>
+                <path d="M8.5 10.5L15.5 7.5" stroke="#F1C250" stroke-width="2" stroke-linecap="round"/>
+                <path d="M8.5 13.5L15.5 16.5" stroke="#F1C250" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Share
+        </div>
+        <!-- Exact Moniepoint Download Icon -->
+        <div class="action-btn">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 3V14" stroke="#F1C250" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M8 10L12 14.5L16 10" stroke="#F1C250" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M5 16V17C5 18.6569 6.34315 20 8 20H16C17.6569 20 19 18.6569 19 17V16" stroke="#F1C250" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            Download
+        </div>
+    </div>
+
+    <!-- Other Details -->
+    <div class="other-details">
+        <div class="od-title">
+            <span>Other Details</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D6A848" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path></svg>
+        </div>
+        
+        <div class="od-card">
+            <div class="row" style="padding-bottom: 22px;">
+                <div class="label">Transaction Type</div>
+                <div class="transfer-badge" style="display:inline-block; font-size: 11px;">TRANSFER</div>
+            </div>
+            
+            <div class="row">
+                <div class="label">Transaction Date</div>
+                <div class="val">{{ date_bottom }}</div>
+            </div>
+            
+            <div class="row">
+                <div class="label">Source</div>
+                <div class="val">{{ sender }}</div>
+            </div>
+            
+            <div class="row">
+                <div class="label">Source Institution</div>
+                <div class="val">{{ bank }}</div>
+            </div>
+            
+            <div class="row" style="padding-bottom: 5px;">
+                <div class="label">Transaction Reference</div>
+                <div class="val" style="word-break: break-all; color: #e1e6ed; line-height: 1.4; font-size: 14.5px;">{{ txn_id }}</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KongaPay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; background-color: #f7f7f7; font-family: 'Roboto', sans-serif; width: 450px; height: 950px; }
+        .page { background-color: white; min-height: 100vh; position: relative;}
+        .top-deck { background-color: #E91E63; height: 10px; width: 100%;}
+        
+        .header { text-align: center; padding: 30px 20px;}
+        .logo { display:flex; align-items:center; justify-content:center; font-size: 24px; font-weight: 700; color:#1a1a1a; margin-bottom: 20px;}
+        .logo svg { height: 28px; margin-right: 8px;}
+        .title { font-size: 20px; font-weight: 700; margin-bottom: 10px; color: #1a1a1a;}
+        .subtitle { font-size: 13px; color: #8e95a5;}
+
+        .card { border: 1px solid #e0e0e0; margin: 20px;}
+        .row { display: flex; padding: 15px 15px; border-bottom: 1px solid #e0e0e0;}
+        .row:last-child { border-bottom: none;}
+        .label { width: 35%; color: #8e95a5; font-size: 14px;}
+        .val { width: 65%; color: #1a1a1a; font-size: 14px; text-align: right; font-weight: 500;}
+        
+        .address { text-align: center; color: #8e95a5; font-size: 12px; margin-top: 30px; line-height: 1.6;}
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="top-deck"></div>
+        <div class="header">
+            <div class="logo">
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="20,80 40,20 40,80 60,80 60,20 80,80" fill="#E91E63"/>
+                </svg>
+                KongaPay&trade;
+            </div>
+            <div class="title">Transaction Receipt</div>
+            <div class="subtitle">Generated on {{ date }}</div>
+        </div>
+
+        <div class="card">
+            <div class="row">
+                <div class="label">Sender</div>
+                <div class="val">{{ sender }}<br><span style="font-weight:400; font-size:12px; color:#555;">Kuda Microfinance Bank | 203****193</span></div>
+            </div>
+            <div class="row">
+                <div class="label">Beneficiary</div>
+                <div class="val">{{ receiver }}<br><span style="font-weight:400; font-size:12px; color:#555;">KongaPay | 100****499</span></div>
+            </div>
+            <div class="row">
+                <div class="label">Transaction Type</div>
+                <div class="val" style="font-weight: 700;">Transfer</div>
+            </div>
+            <div class="row">
+                <div class="label">Status</div>
+                <div class="val" style="font-weight: 700;">Successful</div>
+            </div>
+            <div class="row">
+                <div class="label">Description</div>
+                <div class="val" style="font-weight: 700;">Sent from {{ sender }}</div>
+            </div>
+            <div class="row">
+                <div class="label">Transaction-ID</div>
+                <div class="val">{{ txn_id }}</div>
+            </div>
+            <div class="row">
+                <div class="label">Timestamp</div>
+                <div class="val">{{ date }}</div>
+            </div>
+            <div class="row">
+                <div class="label">Amount</div>
+                <div class="val" style="font-weight: 700;">{{ amount }}</div>
+            </div>
+            <div class="row">
+                <div class="label">EMTL</div>
+                <div class="val" style="font-weight: 700;">₦50.00</div>
+            </div>
+            <div class="row">
+                <div class="label">Fee</div>
+                <div class="val" style="font-weight: 700;">₦0.00</div>
+            </div>
+        </div>
+        
+        <div class="address">
+            13A Idowu Martins, Victoria Island, Lagos.<br>
+            helpdesk@kongapay.com
+        </div>
+    </div>
+</body>
+</html>

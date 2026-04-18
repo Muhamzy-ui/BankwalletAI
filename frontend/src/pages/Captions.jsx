@@ -1,0 +1,1 @@
+export default function Captions() { return <div><h1>AI Captions (Claude)</h1><div className="glass-panel"><p>Manage automated AI framing rules.</p></div></div>; }
