@@ -50,7 +50,18 @@ def _render_html_to_img(template_name, context, output_filename):
     file_path = os.path.join(media_dir, output_filename)
     
     with sync_playwright() as p:
-        browser = p.chromium.launch()
+        browser = p.chromium.launch(
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",          # Critical for Docker/Render
+                "--disable-gpu",
+                "--no-first-run",
+                "--no-zygote",
+                "--single-process",                  # Required on some cloud envs
+                "--disable-extensions",
+            ]
+        )
         page = browser.new_page(viewport={"width": 450, "height": 950})
         page.set_content(html_content, wait_until="networkidle")
         page.evaluate("document.fonts.ready")
