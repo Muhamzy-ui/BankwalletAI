@@ -13,7 +13,7 @@ export default function Settings() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        client.get('bot/settings/')
+        client.get('settings/')
             .then(res => {
                 setSettings(res.data);
                 setLoading(false);
@@ -28,7 +28,7 @@ export default function Settings() {
         e.preventDefault();
         setStatus('Saving...');
         try {
-            await client.put('bot/settings/', settings);
+            await client.put('settings/', settings);
             setStatus('✅ Settings saved successfully!');
             setTimeout(() => setStatus(''), 3000);
         } catch (error) {
