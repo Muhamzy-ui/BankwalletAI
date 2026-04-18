@@ -75,3 +75,25 @@ input:focus, select:focus {
 .animate-fade-up {
   animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .glass-panel {
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  h1 { font-size: 1.8rem; margin-top: 50px; }
+  
+  input, select, textarea {
+    padding: 12px;
+    font-size: 16px; /* Prevents iOS auto-zoom */
+  }
+
+  /* Force action buttons to wrap on mobile */
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+}
