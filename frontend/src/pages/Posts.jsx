@@ -16,7 +16,8 @@ export default function Posts() {
             const response = await client.post('bot/generate-receipt/', formData);
             setStatus('✅ Success! Image generated and queued for posting.');
             if (response.data.image_url) {
-                setPreviewImg(`http://localhost:8000${response.data.image_url}`);
+                const base = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/').replace('/api/', '');
+                setPreviewImg(`${base}${response.data.image_url}`);
             }
         } catch (error) {
             const errDetail = error.response?.data?.error || error.message;

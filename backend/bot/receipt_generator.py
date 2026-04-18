@@ -48,27 +48,51 @@ def _render_html_to_img(template_name, context, output_filename):
     media_dir = os.path.join(settings.BASE_DIR, "media", "receipts")
     os.makedirs(media_dir, exist_ok=True)
     file_path = os.path.join(media_dir, output_filename)
-    
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            args=[
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",          # Critical for Docker/Render
-                "--disable-gpu",
-                "--no-first-run",
-                "--no-zygote",
-                "--single-process",                  # Required on some cloud envs
-                "--disable-extensions",
-            ]
-        )
-        page = browser.new_page(viewport={"width": 450, "height": 950})
-        page.set_content(html_content, wait_until="networkidle")
-        page.evaluate("document.fonts.ready")
-        page.screenshot(path=file_path)
-        browser.close()
-        
-    return f"/media/receipts/{output_filename}"
+
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                args=[
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                    "--no-first-run",
+                    "--no-zygote",
+                    "--single-process",
+                    "--disable-extensions",
+                ]
+            )
+            page = browser.new_page(viewport={"width": 450, "height": 950})
+            page.set_content(html_content, wait_until="networkidle")
+            page.evaluate("document.fonts.ready")
+            page.screenshot(path=file_path)
+            browser.close()
+        return f"/media/receipts/{output_filename}"
+    except Exception as e:
+        print(f"[Playwright ERROR] {e} — falling back to sendlikethis template")
+        # Fall back to a real photo template from the templates folder
+        template_dir = os.path.join(settings.BASE_DIR, "media", "templates")
+        return _sendlikethis_fallback(template_dir, media_dir)
+
+
+def _sendlikethis_fallback(template_dir, media_dir):
+    """Emergency fallback: pick any real template image."""
+    all_patterns = [
+        os.path.join(template_dir, "*.jpeg"),
+        os.path.join(template_dir, "*.jpg"),
+        os.path.join(template_dir, "*.png"),
+    ]
+    candidates = []
+    for pat in all_patterns:
+        candidates.extend(glob.glob(pat))
+    if not candidates:
+        return None
+    chosen = random.choice(candidates)
+    filename = f"receipt_fallback_{_rand_txn_id(10)}{os.path.splitext(chosen)[1]}"
+    dest = os.path.join(media_dir, filename)
+    shutil.copy(chosen, dest)
+    return f"/media/receipts/{filename}"
 
 # ─── Bank Data Generators ────────────────────────────────────────────────────
 
@@ -181,6 +205,7 @@ ALL_BANKS = list(BANK_GENERATORS.keys())
 
 def generate_receipt(bank_type=None, amount=None, sender_name=None, receiver_name=None):
     media_dir = os.path.join(settings.BASE_DIR, "media", "receipts")
+    os.makedirs(media_dir, exist_ok=True)
     template_dir = os.path.join(settings.BASE_DIR, "media", "templates")
 
     use_sendlikethis = random.random() < 0.40
