@@ -11,6 +11,7 @@ from datetime import datetime
 
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.db import models
 from playwright.sync_api import sync_playwright
 
 # ─── Utility helpers ─────────────────────────────────────────────────────────
@@ -169,28 +170,36 @@ def _gen_opay():
 
 # ─── Sendlikethis passthrough ─────────────────────────────────────────────────
 
-def _handle_sendlikethis(template_dir, media_dir):
+def _sendlikethis_fallback(template_dir, media_dir):
+    """Pick any template from DB or local disk."""
+    from bot.models import TemplateImage
+    db_templates = list(TemplateImage.objects.filter(is_active=True))
+    if db_templates:
+        chosen = random.choice(db_templates)
+        return chosen.image.url
+
+    # Fallback to local files if DB is empty
     patterns = [
-        os.path.join(template_dir, "*sendlikethis*.jpeg"),
-        os.path.join(template_dir, "*sendlikethis*.jpg"),
-        os.path.join(template_dir, "*sendlikethis*.png"),
-        os.path.join(template_dir, "*changethename*.jpeg"),
-        os.path.join(template_dir, "*changethename*.jpg"),
-        os.path.join(template_dir, "*changethename*.png"),
+        os.path.join(template_dir, "*sendlikethis*.*"),
+        os.path.join(template_dir, "*changethename*.*"),
     ]
     candidates = []
     for p in patterns:
         candidates.extend(glob.glob(p))
-
+    
     if not candidates:
         return None
-
+    
     chosen = random.choice(candidates)
     os.makedirs(media_dir, exist_ok=True)
-    filename = f"receipt_sendlikethis_{_rand_txn_id(10)}{os.path.splitext(chosen)[1]}"
+    filename = f"receipt_fallback_{_rand_txn_id(10)}{os.path.splitext(chosen)[1]}"
     dest = os.path.join(media_dir, filename)
     shutil.copy(chosen, dest)
     return f"/media/receipts/{filename}"
+
+def _handle_sendlikethis(template_dir, media_dir):
+    # This was the old name, now aliased to the generic fallback
+    return _sendlikethis_fallback(template_dir, media_dir)
 
 
 # ─── Main API ─────────────────────────────────────────────────────────
@@ -222,22 +231,30 @@ BANK_PREFIXES = {
 }
 
 def _pick_bank_template(bank_type, template_dir, media_dir):
-    """Pick a real template image matching the given bank name."""
-    os.makedirs(media_dir, exist_ok=True)
+    """Pick a real template image matching the given bank name from DB or disk."""
+    from bot.models import TemplateImage
     bank_key = bank_type.lower().replace(" ", "")
     prefixes = BANK_PREFIXES.get(bank_key, [bank_key])
 
+    # 1. Try Database first
+    query = models.Q()
+    for prefix in prefixes:
+        query |= models.Q(bank_name__icontains=prefix) | models.Q(image__icontains=prefix)
+    
+    db_templates = list(TemplateImage.objects.filter(query, is_active=True))
+    if db_templates:
+        chosen = random.choice(db_templates)
+        return chosen.image.url, None  # Cloudinary URLs don't need local file path for sending
+
+    # 2. Try Local Disk second
     candidates = []
     for prefix in prefixes:
         for ext in ['*.jpeg', '*.jpg', '*.png']:
             candidates.extend(glob.glob(os.path.join(template_dir, f"{prefix}*{ext[1:]}*")))
             candidates.extend(glob.glob(os.path.join(template_dir, f"*{prefix}*{ext[1:]}")))
 
-    # Remove duplicates
     candidates = list(set(candidates))
-
     if not candidates:
-        # Fall back to any template
         return _sendlikethis_fallback(template_dir, media_dir), None
 
     chosen = random.choice(candidates)

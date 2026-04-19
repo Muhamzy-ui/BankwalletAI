@@ -7,7 +7,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from bot.views import (RegisterView, TelegramChannelViewSet, ScheduleWindowViewSet,
                        CaptionTemplateViewSet, PostViewSet, BotSettingsView, dashboard_stats,
                        create_educational_receipt, list_templates, delete_template, rename_template,
-                       template_coordinates, CustomGalleryViewSet)
+                       template_coordinates, CustomGalleryViewSet, TemplateImageViewSet)
 from analytics.views import activity_log, channel_performance, post_timeline
 
 router = DefaultRouter()
@@ -16,6 +16,7 @@ router.register(r'schedule-windows', ScheduleWindowViewSet, basename='schedule-w
 router.register(r'caption-templates', CaptionTemplateViewSet, basename='caption-templates')
 router.register(r'posts', PostViewSet, basename='posts')
 router.register(r'gallery', CustomGalleryViewSet, basename='gallery')
+router.register(r'templates-db', TemplateImageViewSet, basename='templates-db')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

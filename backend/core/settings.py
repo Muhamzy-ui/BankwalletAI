@@ -69,3 +69,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
+
+# ─── Cloudinary Storage ──────────────────────────────────────────────────────
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', 'dyinhcicj'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '713329398677614'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', '6b7mEQNHwSLhXPXxCEwcwwTMllg'),
+}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# Keep static files locally (whitenoise) but media on Cloudinary
+# MEDIA_URL is already '/media/'
+# django-cloudinary-storage handles prepend if we use MediaCloudinaryStorage

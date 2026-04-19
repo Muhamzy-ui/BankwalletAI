@@ -55,6 +55,18 @@ class CustomGalleryImage(models.Model):
         return f"GalleryImage {self.id}"
 
 
+class TemplateImage(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='templates')
+    image = models.ImageField(upload_to="templates/")
+    bank_name = models.CharField(max_length=100, blank=True)
+    template_type = models.CharField(max_length=50, default='changethename', help_text="e.g. changethename or sendlikethis")
+    is_active = models.BooleanField(default=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Template {self.id} - {self.bank_name}"
+
+
 class Post(models.Model):
     STATUS_CHOICES = [('draft','Draft'),('queued','Queued'),('sent','Sent'),('failed','Failed'),('cancelled','Cancelled')]
     TYPE_CHOICES = [('text','Text'),('photo','Photo'),('video','Video'),('document','Document'),('poll','Poll')]

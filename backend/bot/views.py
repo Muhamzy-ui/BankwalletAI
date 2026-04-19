@@ -8,9 +8,11 @@ from django.conf import settings
 import requests
 import json
 import os
-from .models import TelegramChannel, ScheduleWindow, CaptionTemplate, Post, BotSettings, CustomGalleryImage
-from .serializers import (UserSerializer, RegisterSerializer, TelegramChannelSerializer,
-                           ScheduleWindowSerializer, CaptionTemplateSerializer, PostSerializer, BotSettingsSerializer, CustomGalleryImageSerializer)
+from .models import (TelegramChannel, ScheduleWindow, CaptionTemplate, Post, BotSettings, 
+                     CustomGalleryImage, TemplateImage)
+from .serializers import (UserSerializer, RegisterSerializer, TelegramChannelSerializer, 
+                          ScheduleWindowSerializer, CaptionTemplateSerializer, PostSerializer, 
+                          BotSettingsSerializer, CustomGalleryImageSerializer, TemplateImageSerializer)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -75,6 +77,17 @@ class CustomGalleryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return CustomGalleryImage.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class TemplateImageViewSet(viewsets.ModelViewSet):
+    serializer_class = TemplateImageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return TemplateImage.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
