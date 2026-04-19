@@ -8,7 +8,7 @@ from bot.views import (RegisterView, TelegramChannelViewSet, ScheduleWindowViewS
                        CaptionTemplateViewSet, PostViewSet, BotSettingsView, dashboard_stats,
                        create_educational_receipt, list_templates, delete_template, rename_template,
                        template_coordinates, CustomGalleryViewSet, TemplateImageViewSet,
-                       test_telegram_connection)
+                       test_telegram_connection, wipe_bot_data)
 from analytics.views import activity_log, channel_performance, post_timeline
 
 router = DefaultRouter()
@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/dashboard/', dashboard_stats),
     path('api/bot/generate-receipt/', create_educational_receipt),
     path('api/bot/test-telegram/', test_telegram_connection),
+    path('api/bot/wipe/', wipe_bot_data),
     path('api/templates/', list_templates),
     path('api/templates/rename/', rename_template),
     path('api/templates/coords/', template_coordinates),

@@ -74,6 +74,17 @@ export default function Settings() {
         } catch (error) { setStatus('❌ Failed to save.'); }
     };
 
+    const handleWipeBotData = async () => {
+        if (!window.confirm("⚠️ DANGER: This will delete ALL your bot settings, channels, and scheduled posts. Are you 100% sure?")) return;
+        try {
+            await client.post('bot/wipe/');
+            alert('All bots and channels successfully deleted! You can start fresh now.');
+            window.location.reload();
+        } catch (err) {
+            alert('Failed to delete bot data.');
+        }
+    };
+
     const handleUploadTemplate = async (e) => {
         e.preventDefault();
         if (!uploadFile) return;
@@ -160,6 +171,14 @@ export default function Settings() {
                             {status && <span style={{ color: status.includes('✅') ? 'var(--success)' : 'var(--danger)', fontSize: '0.85rem' }}>{status}</span>}
                         </div>
                     </form>
+
+                    <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                        <h4 style={{ color: 'var(--danger)', marginTop: 0 }}>Danger Zone</h4>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Factory reset all your bot credentials and registered channels instantly to start fresh.</p>
+                        <button type="button" onClick={handleWipeBotData} style={{ background: 'rgba(227,25,95,0.15)', color: 'var(--danger)', border: '1px solid rgba(227,25,95,0.3)', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}>
+                            🗑 Wipe Everything & Start Afresh
+                        </button>
+                    </div>
                 </div>
 
                 {/* ── Upload New Template (Cloudinary) ── */}

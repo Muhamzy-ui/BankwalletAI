@@ -437,6 +437,16 @@ def test_telegram_connection(request):
     })
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def wipe_bot_data(request):
+    from .models import BotSettings, TelegramChannel, Post
+    # Only delete for the current user to be safe
+    Post.objects.filter(owner=request.user).delete()
+    TelegramChannel.objects.filter(owner=request.user).delete()
+    BotSettings.objects.filter(owner=request.user).delete()
+    return Response({'message': 'All bots and channels have been deleted.'})
+
 import glob
 import os
 
