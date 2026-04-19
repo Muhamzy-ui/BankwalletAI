@@ -96,7 +96,8 @@ class Post(models.Model):
 
 class BotSettings(models.Model):
     owner = models.OneToOneField(User, on_delete=models.CASCADE, related_name='bot_settings')
-    bot_token = models.CharField(max_length=300, blank=True)
+    bot_token = models.CharField(max_length=200, blank=True)
+    bot_is_active = models.BooleanField(default=True, help_text="Global switch to pause/resume all bot activities.")
     anthropic_api_key = models.CharField(max_length=300, blank=True)
     auto_caption_enabled = models.BooleanField(default=True)
     auto_caption_prompt = models.TextField(default='Generate an engaging Telegram caption for a Nigerian audience. Be energetic, use relevant emojis, and include a call to action. Keep it under 200 characters.')

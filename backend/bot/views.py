@@ -290,9 +290,11 @@ def dashboard_stats(request):
     user = request.user
     channels = TelegramChannel.objects.filter(owner=user)
     posts = Post.objects.filter(owner=user)
+    bot_settings, _ = BotSettings.objects.get_or_create(owner=user)
     today = timezone.now().date()
 
     stats = {
+        'bot_is_active': bot_settings.bot_is_active,
         'total_channels': channels.count(),
         'active_channels': channels.filter(is_active=True).count(),
         'total_posts': posts.count(),
@@ -316,11 +318,21 @@ def dashboard_stats(request):
     return Response(stats)
 
 
-from .receipt_generator import generate_receipt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_bot(request):
+    bot_settings, _ = BotSettings.objects.get_or_create(owner=request.user)
+    bot_settings.bot_is_active = not bot_settings.bot_is_active
+    bot_settings.save()
+    return Response({'bot_is_active': bot_settings.bot_is_active})
+
+
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def create_educational_receipt(request):
+    from .receipt_generator import generate_receipt
     bank_type = request.data.get('bank_type', 'opay')
     amount = request.data.get('amount', 501000.0)
     channel_id = request.data.get('channel_id')

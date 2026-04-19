@@ -82,6 +82,11 @@ def process_queued_posts(self):
             logger.info(f"Post {post.id} skipped - outside schedule window")
             continue
 
+        # Global Pause Check
+        if hasattr(post.owner, 'bot_settings') and not post.owner.bot_settings.bot_is_active:
+            logger.info(f"Post {post.id} skipped - bot is paused by user")
+            continue
+
         # Auto-generate caption if missing and auto-caption enabled
         if not post.caption and post.owner.bot_settings.auto_caption_enabled:
             ai_caption = generate_ai_caption(post.owner)
@@ -147,6 +152,11 @@ def auto_fill_schedule_windows():
         # If the channel is currently inside a schedule window!
         if is_within_schedule(channel):
             
+            # Global Pause Check
+            if hasattr(channel.owner, 'bot_settings') and not channel.owner.bot_settings.bot_is_active:
+                logger.info(f"Skipping auto-post for {channel.name} - bot is globally paused.")
+                continue
+
             # Recalculate today's images using the channel owner's timezone to ensure "today" is accurate for them
             user_tz_str = channel.owner.bot_settings.timezone if hasattr(channel.owner, 'bot_settings') else 'Africa/Lagos'
             try:
