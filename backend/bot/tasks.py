@@ -163,7 +163,7 @@ def auto_fill_schedule_windows():
                     chosen_img = random.choice(today_images)
                     image_url = chosen_img.image.url
                 else:
-                    image_url = generate_receipt()  # No args = fully random
+                    image_url, _ = generate_receipt()  # No args = fully random
 
                 # Build a production URL for receipts (gallery images already have /media/)
                 site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
