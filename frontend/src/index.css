@@ -13,6 +13,7 @@ body {
   margin: 0;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   background-color: var(--bg);
+  overflow-x: hidden;
   background-image: 
     radial-gradient(circle at 15% 50%, rgba(45, 111, 247, 0.08), transparent 25%),
     radial-gradient(circle at 85% 30%, rgba(21, 209, 134, 0.05), transparent 25%);

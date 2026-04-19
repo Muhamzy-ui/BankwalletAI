@@ -85,7 +85,8 @@ export default function Layout() {
                     <Link to="/" onClick={closeMenu} style={getLinkStyle('/')}><Home size={20}/> Dashboard</Link>
                     <Link to="/channels" onClick={closeMenu} style={getLinkStyle('/channels')}><Send size={20}/> Channels</Link>
                     <Link to="/posts" onClick={closeMenu} style={getLinkStyle('/posts')}><ImageIcon size={20}/> Generator</Link>
-                    <Link to="/mapper" onClick={closeMenu} style={getLinkStyle('/mapper')}><Target size={20}/> Automation Mapper</Link>
+                    <Link to="/mapper" onClick={closeMenu} style={getLinkStyle('/mapper')}><Target size={20}/> Daily Image Pool</Link>
+                    <Link to="/captions" onClick={closeMenu} style={getLinkStyle('/captions')}><MessageSquareText size={20}/> Message Pool</Link>
                     <Link to="/schedule" onClick={closeMenu} style={getLinkStyle('/schedule')}><Calendar size={20}/> Smart Timers</Link>
                     <Link to="/settings" onClick={closeMenu} style={getLinkStyle('/settings')}><SettingsIcon size={20}/> Bot Settings</Link>
                 </nav>

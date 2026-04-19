@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from .models import TelegramChannel, ScheduleWindow, CaptionTemplate, Post, BotSettings
+from .models import TelegramChannel, ScheduleWindow, CaptionTemplate, Post, BotSettings, CustomGalleryImage
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -49,7 +49,14 @@ class CaptionTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CaptionTemplate
         fields = '__all__'
-        read_only_fields = ['owner', 'use_count']
+        read_only_fields = ('owner', 'use_count', 'created_at', 'is_ai_generated')
+
+
+class CustomGalleryImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomGalleryImage
+        fields = '__all__'
+        read_only_fields = ('owner', 'uploaded_at')
 
 
 class PostSerializer(serializers.ModelSerializer):

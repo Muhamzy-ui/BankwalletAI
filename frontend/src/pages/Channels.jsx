@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import client from '../api/client';
-import { Send, Trash2, Plus, RefreshCw } from 'lucide-react';
+import { Send, Trash2, Plus, RefreshCw, PenTool } from 'lucide-react';
 
 export default function Channels() {
     const [channels, setChannels] = useState([]);
@@ -112,7 +113,10 @@ export default function Channels() {
                             <h4 style={{ margin: '0 0 10px 0', fontSize: '1.2rem' }}>{channel.name}</h4>
                             <p style={{ margin: '5px 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>ID: {channel.channel_id}</p>
                             
-                            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+                            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                <Link to={`/posts?channel=${channel.id}`} style={{ textDecoration: 'none', background: 'rgba(45, 111, 247, 0.1)', color: 'var(--brand)', border: '1px solid rgba(45, 111, 247, 0.2)', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                    <PenTool size={16} /> Send Post
+                                </Link>
                                 <button onClick={() => handleDelete(channel.id)} style={{ background: 'rgba(227, 25, 95, 0.1)', color: 'var(--danger)', border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
                                     <Trash2 size={16} /> Disconnect
                                 </button>

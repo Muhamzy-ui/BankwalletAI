@@ -114,35 +114,56 @@ def refresh_channel_stats():
 @shared_task
 def auto_fill_schedule_windows():
     """Automatically queue random receipts when windows are active!"""
-    from bot.models import TelegramChannel, Post
+    from bot.models import TelegramChannel, Post, CustomGalleryImage, CaptionTemplate
     from bot.receipt_generator import generate_receipt
     import random
-    from datetime import timedelta
+    from datetime import timedelta, date
 
     now = timezone.now()
+    today_start = timezone.make_aware(timezone.datetime.combine(date.today(), timezone.datetime.min.time()))
     current_day = timezone.localtime(now).weekday()
     
     channels = TelegramChannel.objects.filter(is_active=True)
+    
+    # Check if there are any Custom Gallery Images uploaded TODAY
+    today_images = list(CustomGalleryImage.objects.filter(uploaded_at__gte=today_start, is_active=True))
+    
+    # Grab all available text captions
+    all_captions = list(CaptionTemplate.objects.all())
+
     for channel in channels:
         # If the channel is currently inside a schedule window!
         if is_within_schedule(channel):
-            # Check if we already auto-posted recently (in the last 1 hour)
-            recent_post = Post.objects.filter(channel=channel, scheduled_time__gte=now - timedelta(hours=1)).exists()
+            # Check if we already auto-posted recently (in the last 5 minutes)
+            recent_post = Post.objects.filter(channel=channel, scheduled_time__gte=now - timedelta(minutes=5)).exists()
             if not recent_post:
-                # Generate a completely random receipt (bank, amount, names are all randomised inside)
-                image_url = generate_receipt()  # No args = fully random
+                image_url = ""
+                
+                # Use today's promo images if available, else generate a random receipt
+                if today_images:
+                    chosen_img = random.choice(today_images)
+                    image_url = chosen_img.image.url
+                else:
+                    image_url = generate_receipt()  # No args = fully random
 
-                # Build a production URL — use SITE_URL from settings if set, else localhost
+                # Build a production URL for receipts (gallery images already have /media/)
                 site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+                if not image_url.startswith('http'):
+                    image_url = f"{site_url.rstrip('/')}{image_url}"
+
+                # Choose a random saved text caption if available
+                final_caption = ""
+                if all_captions:
+                    final_caption = random.choice(all_captions).content
 
                 # Queue it for immediate dispatch
                 Post.objects.create(
                     owner=channel.owner,
                     channel=channel,
                     post_type='photo',
-                    media_url=f"{site_url}{image_url}",
-                    caption="",   # Set caption from dashboard CaptionTemplates if needed
+                    media_url=image_url,
+                    caption=final_caption,
                     status='queued',
                     scheduled_time=now
                 )
-                logger.info(f"Auto-queued receipt post for channel {channel.name}.")
+                logger.info(f"Auto-queued post for {channel.name}.")

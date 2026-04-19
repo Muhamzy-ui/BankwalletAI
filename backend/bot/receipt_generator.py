@@ -174,6 +174,9 @@ def _handle_sendlikethis(template_dir, media_dir):
         os.path.join(template_dir, "*sendlikethis*.jpeg"),
         os.path.join(template_dir, "*sendlikethis*.jpg"),
         os.path.join(template_dir, "*sendlikethis*.png"),
+        os.path.join(template_dir, "*changethename*.jpeg"),
+        os.path.join(template_dir, "*changethename*.jpg"),
+        os.path.join(template_dir, "*changethename*.png"),
     ]
     candidates = []
     for p in patterns:

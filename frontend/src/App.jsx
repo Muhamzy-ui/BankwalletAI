@@ -6,9 +6,10 @@ import Dashboard from './pages/Dashboard'
 import Channels from './pages/Channels'
 import Posts from './pages/Posts'
 import Schedule from './pages/Schedule'
+import Captions from './pages/Captions'
 import Analytics from './pages/Analytics'
 import Settings from './pages/Settings'
-import Mapper from './pages/Mapper'
+import Gallery from './pages/Gallery'
 
 export default function App() {
   const { token } = useAuth()
@@ -24,9 +25,10 @@ export default function App() {
           <Route path="channels" element={<Channels />} />
           <Route path="posts" element={<Posts />} />
           <Route path="schedule" element={<Schedule />} />
+          <Route path="captions" element={<Captions />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="mapper" element={<Mapper />} />
+          <Route path="mapper" element={<Gallery />} />
         </Route>
       </Routes>
     </BrowserRouter>

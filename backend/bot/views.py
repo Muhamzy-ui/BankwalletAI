@@ -7,9 +7,10 @@ from django.utils import timezone
 from django.conf import settings
 import requests
 import json
-from .models import TelegramChannel, ScheduleWindow, CaptionTemplate, Post, BotSettings
+import os
+from .models import TelegramChannel, ScheduleWindow, CaptionTemplate, Post, BotSettings, CustomGalleryImage
 from .serializers import (UserSerializer, RegisterSerializer, TelegramChannelSerializer,
-                           ScheduleWindowSerializer, CaptionTemplateSerializer, PostSerializer, BotSettingsSerializer)
+                           ScheduleWindowSerializer, CaptionTemplateSerializer, PostSerializer, BotSettingsSerializer, CustomGalleryImageSerializer)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -63,6 +64,17 @@ class CaptionTemplateViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return CaptionTemplate.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+class CustomGalleryViewSet(viewsets.ModelViewSet):
+    serializer_class = CustomGalleryImageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return CustomGalleryImage.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

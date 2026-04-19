@@ -45,6 +45,16 @@ class CaptionTemplate(models.Model):
         return self.name
 
 
+class CustomGalleryImage(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='gallery_images')
+    image = models.ImageField(upload_to="gallery/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"GalleryImage {self.id}"
+
+
 class Post(models.Model):
     STATUS_CHOICES = [('draft','Draft'),('queued','Queued'),('sent','Sent'),('failed','Failed'),('cancelled','Cancelled')]
     TYPE_CHOICES = [('text','Text'),('photo','Photo'),('video','Video'),('document','Document'),('poll','Poll')]
