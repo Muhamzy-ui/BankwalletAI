@@ -397,8 +397,49 @@ def create_educational_receipt(request):
             return Response({'success': True, 'image_url': image_url, 'message': f"Image generated. Telegram said: {data.get('description', 'unknown error')}"})
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def test_telegram_connection(request):
+    """Diagnostic endpoint: test bot token + channel access directly"""
+    channel_id = request.data.get('channel_id', '')
+    try:
+        bot_settings = request.user.bot_settings
+        token = bot_settings.bot_token or settings.TELEGRAM_BOT_TOKEN
+    except Exception:
+        token = settings.TELEGRAM_BOT_TOKEN
+
+    if not token:
+        return Response({'error': 'No bot token set. Go to Bot Settings and save your token.'}, status=400)
+
+    # 1. Test token validity via getMe
+    me = requests.get(f'https://api.telegram.org/bot{token}/getMe', timeout=10).json()
+    if not me.get('ok'):
+        return Response({'error': f'Bad bot token: {me.get("description")}', 'step': 'getMe'}, status=400)
+
+    bot_info = me['result']
+    if not channel_id:
+        return Response({'bot': bot_info, 'message': 'Token is valid! Provide a channel_id to test channel access.'})
+
+    # 2. Test channel access via getChat
+    chat = requests.get(f'https://api.telegram.org/bot{token}/getChat',
+        params={'chat_id': channel_id}, timeout=10).json()
+
+    # 3. Test bot admin status via getChatMember
+    member = requests.get(f'https://api.telegram.org/bot{token}/getChatMember',
+        params={'chat_id': channel_id, 'user_id': bot_info['id']}, timeout=10).json()
+
+    return Response({
+        'bot_username': bot_info.get('username'),
+        'channel_found': chat.get('ok'),
+        'channel_error': chat.get('description') if not chat.get('ok') else None,
+        'channel_title': chat.get('result', {}).get('title') if chat.get('ok') else None,
+        'bot_status_in_channel': member.get('result', {}).get('status') if member.get('ok') else member.get('description'),
+    })
+
+
 import glob
 import os
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
