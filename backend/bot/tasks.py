@@ -171,6 +171,10 @@ def auto_fill_schedule_windows():
                 else:
                     image_url, _ = generate_receipt()  # No args = fully random
 
+                if not image_url:
+                    print(f"Skipping auto-post for {channel.channel_name}: No templates available.")
+                    continue
+
                 # Build a production URL for receipts (gallery images already have /media/)
                 site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
                 if not image_url.startswith('http'):
