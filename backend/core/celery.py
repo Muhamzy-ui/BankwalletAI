@@ -12,9 +12,9 @@ app.conf.beat_schedule = {
         'task': 'bot.tasks.process_queued_posts',
         'schedule': 60.0,
     },
-    'auto-fill-schedule-windows-every-5-mins': {
+    'auto-fill-schedule-windows-every-minute': {
         'task': 'bot.tasks.auto_fill_schedule_windows',
-        'schedule': 300.0, # Check every 5 mins
+        'schedule': 60.0,  # Check every minute; actual interval controlled by BotSettings.default_send_interval_minutes
     },
     'refresh-channel-stats-hourly': {
         'task': 'bot.tasks.refresh_channel_stats',

@@ -375,10 +375,27 @@ import os
 def list_templates(request):
     template_dir = os.path.join(settings.BASE_DIR, 'media', 'templates')
     os.makedirs(template_dir, exist_ok=True)
-    files = glob.glob(os.path.join(template_dir, '*changethename*.*'))
-    # Return just the filenames and their visual URL counterpart
-    results = [{'filename': os.path.basename(f), 'url': f"/media/templates/{os.path.basename(f)}"} for f in files]
+    # Show both sendlikethis and changethename files
+    files = []
+    for pat in ['*sendlikethis*.*', '*changethename*.*']:
+        files.extend(glob.glob(os.path.join(template_dir, pat)))
+    files = list(set(files))  # deduplicate
+    site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+    results = [{'filename': os.path.basename(f), 'url': f"{site_url}/media/templates/{os.path.basename(f)}"} for f in files]
     return Response(results)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_template(request, filename):
+    template_dir = os.path.join(settings.BASE_DIR, 'media', 'templates')
+    # Security: strip any path traversal attempts
+    safe_name = os.path.basename(filename)
+    file_path = os.path.join(template_dir, safe_name)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        return Response({'success': True, 'deleted': safe_name})
+    return Response({'error': 'File not found'}, status=404)
 
 import json
 @api_view(['GET', 'POST'])

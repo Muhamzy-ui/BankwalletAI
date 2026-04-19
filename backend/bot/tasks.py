@@ -131,8 +131,7 @@ def auto_fill_schedule_windows():
     from datetime import timedelta, date
 
     now = timezone.now()
-    
-    channels = TelegramChannel.objects.filter(is_active=True)
+    channels = TelegramChannel.objects.filter(is_active=True).select_related('owner', 'owner__bot_settings')
     
     # Grab all available text captions
     all_captions = list(CaptionTemplate.objects.all())
@@ -153,8 +152,15 @@ def auto_fill_schedule_windows():
             # Check if there are any Custom Gallery Images uploaded TODAY
             today_images = list(CustomGalleryImage.objects.filter(uploaded_at__gte=today_start, is_active=True))
 
-            # Check if we already auto-posted recently (in the last 4.5 minutes to account for Celery milliseconds offset)
-            recent_post = Post.objects.filter(channel=channel, scheduled_time__gte=now - timedelta(minutes=4, seconds=30)).exists()
+            # Get this channel's custom sending interval (default 5 minutes if not set)
+            try:
+                interval_minutes = channel.owner.bot_settings.default_send_interval_minutes or 5
+            except Exception:
+                interval_minutes = 5
+            interval_buffer = timedelta(minutes=interval_minutes) - timedelta(seconds=30)
+
+            # Check if we already auto-posted recently within the interval window
+            recent_post = Post.objects.filter(channel=channel, scheduled_time__gte=now - interval_buffer).exists()
             if not recent_post:
                 image_url = ""
                 
@@ -170,10 +176,26 @@ def auto_fill_schedule_windows():
                 if not image_url.startswith('http'):
                     image_url = f"{site_url.rstrip('/')}{image_url}"
 
+                # Extract amount from image filename (e.g. receipt_50000_changethename.jpg -> 50,000)
+                extracted_amount = None
+                try:
+                    import re
+                    fname = image_url.split('/')[-1]  # just the filename
+                    match = re.search(r'_(\d{4,})', fname)  # find a 4+ digit number
+                    if match:
+                        raw = int(match.group(1))
+                        extracted_amount = f"{raw:,}"  # format as 50,000
+                except Exception:
+                    pass
+
                 # Choose a random saved text caption if available
                 final_caption = ""
                 if all_captions:
-                    final_caption = random.choice(all_captions).content
+                    chosen = random.choice(all_captions)
+                    final_caption = chosen.content
+                    # Replace {amount} placeholder with extracted filename amount
+                    if extracted_amount:
+                        final_caption = final_caption.replace('{amount}', f'₦{extracted_amount}')
 
                 # Queue it for immediate dispatch
                 Post.objects.create(
