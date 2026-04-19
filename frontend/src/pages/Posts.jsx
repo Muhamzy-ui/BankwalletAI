@@ -8,7 +8,7 @@ export default function Posts() {
     const [formData, setFormData] = useState({ 
         channel_id: searchParams.get('channel') || '', 
         bank_type: 'moniepoint', 
-        amount: 850000,
+        amount: 96000,
         caption: ''
     });
     const [previewImg, setPreviewImg] = useState(null);
@@ -61,12 +61,12 @@ export default function Posts() {
                             <option value="vfd">VFD / Rigo (Checkmark)</option>
                         </select>
 
-                        <label>Amount (minimum 500k)</label>
+                        <label>Amount (minimum ₦96,000)</label>
                         <input 
                             type="number" 
                             value={formData.amount} 
                             onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value)})} 
-                            min="500000" 
+                            min="96000" 
                             required 
                         />
 
