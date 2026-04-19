@@ -389,13 +389,39 @@ def list_templates(request):
 @permission_classes([IsAuthenticated])
 def delete_template(request, filename):
     template_dir = os.path.join(settings.BASE_DIR, 'media', 'templates')
-    # Security: strip any path traversal attempts
     safe_name = os.path.basename(filename)
     file_path = os.path.join(template_dir, safe_name)
     if os.path.exists(file_path):
         os.remove(file_path)
         return Response({'success': True, 'deleted': safe_name})
     return Response({'error': 'File not found'}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rename_template(request):
+    """Rename a template file to allow amount embedding in filename"""
+    template_dir = os.path.join(settings.BASE_DIR, 'media', 'templates')
+    old_name = os.path.basename(request.data.get('old_name', ''))
+    new_name = os.path.basename(request.data.get('new_name', ''))
+    if not old_name or not new_name:
+        return Response({'error': 'old_name and new_name are required'}, status=400)
+    # Keep the original file extension - never allow extension change for security
+    _, old_ext = os.path.splitext(old_name)
+    _, new_ext = os.path.splitext(new_name)
+    if not new_ext:
+        new_name = new_name + old_ext
+    elif old_ext.lower() != new_ext.lower():
+        new_name = os.path.splitext(new_name)[0] + old_ext
+    old_path = os.path.join(template_dir, old_name)
+    new_path = os.path.join(template_dir, new_name)
+    if not os.path.exists(old_path):
+        return Response({'error': 'File not found'}, status=404)
+    if os.path.exists(new_path):
+        return Response({'error': 'A file with that name already exists'}, status=400)
+    os.rename(old_path, new_path)
+    site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+    return Response({'success': True, 'filename': new_name, 'url': f"{site_url}/media/templates/{new_name}"})
 
 import json
 @api_view(['GET', 'POST'])

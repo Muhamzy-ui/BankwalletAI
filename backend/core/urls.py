@@ -6,7 +6,8 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from bot.views import (RegisterView, TelegramChannelViewSet, ScheduleWindowViewSet,
                        CaptionTemplateViewSet, PostViewSet, BotSettingsView, dashboard_stats,
-                       create_educational_receipt, list_templates, delete_template, template_coordinates, CustomGalleryViewSet)
+                       create_educational_receipt, list_templates, delete_template, rename_template,
+                       template_coordinates, CustomGalleryViewSet)
 from analytics.views import activity_log, channel_performance, post_timeline
 
 router = DefaultRouter()
@@ -25,6 +26,7 @@ urlpatterns = [
     path('api/dashboard/', dashboard_stats),
     path('api/bot/generate-receipt/', create_educational_receipt),
     path('api/templates/', list_templates),
+    path('api/templates/rename/', rename_template),
     path('api/templates/coords/', template_coordinates),
     path('api/templates/<str:filename>/', delete_template),
     path('api/analytics/activity/', activity_log),
