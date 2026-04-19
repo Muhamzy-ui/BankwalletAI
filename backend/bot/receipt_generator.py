@@ -174,10 +174,14 @@ def _sendlikethis_fallback(template_dir, media_dir):
     """Pick any template exclusively from Cloudinary DB."""
     try:
         from bot.models import TemplateImage
-        db_templates = list(TemplateImage.objects.filter(is_active=True))
+        # Don't filter by is_active to avoid missing templates due to migration issues
+        db_templates = list(TemplateImage.objects.all())
+        print(f"[DEBUG] _sendlikethis_fallback: found {len(db_templates)} total templates")
         if db_templates:
             chosen = random.choice(db_templates)
-            return chosen.image.url
+            url = chosen.image.url if hasattr(chosen.image, 'url') else str(chosen.image)
+            print(f"[DEBUG] Chose template id={chosen.id} bank={chosen.bank_name} url={url}")
+            return url
     except Exception as e:
         return f"EXCEPTION: {e}"
     
@@ -220,16 +224,24 @@ def _pick_bank_template(bank_type, template_dir, media_dir):
     """Pick a template matching the given bank name exclusively from Cloudinary DB."""
     bank_key = bank_type.lower().replace(" ", "")
     prefixes = BANK_PREFIXES.get(bank_key, [bank_key])
+    print(f"[DEBUG] _pick_bank_template: looking for bank_key={bank_key} prefixes={prefixes}")
 
     try:
         from bot.models import TemplateImage
+        # Check total templates first
+        total = TemplateImage.objects.count()
+        print(f"[DEBUG] Total TemplateImage records: {total}")
+        # Search without is_active filter
         query = models.Q()
         for prefix in prefixes:
-            query |= models.Q(bank_name__icontains=prefix) | models.Q(image__icontains=prefix)
-        db_templates = list(TemplateImage.objects.filter(query, is_active=True))
+            query |= models.Q(bank_name__icontains=prefix)
+        db_templates = list(TemplateImage.objects.filter(query))
+        print(f"[DEBUG] Found {len(db_templates)} templates matching {prefixes}")
         if db_templates:
             chosen = random.choice(db_templates)
-            return chosen.image.url, None
+            url = chosen.image.url if hasattr(chosen.image, 'url') else str(chosen.image)
+            print(f"[DEBUG] Chose template id={chosen.id} url={url}")
+            return url, None
     except Exception as e:
         return f"EXCEPTION: {e}", None
         
