@@ -153,8 +153,8 @@ def auto_fill_schedule_windows():
             # Check if there are any Custom Gallery Images uploaded TODAY
             today_images = list(CustomGalleryImage.objects.filter(uploaded_at__gte=today_start, is_active=True))
 
-            # Check if we already auto-posted recently (in the last 5 minutes)
-            recent_post = Post.objects.filter(channel=channel, scheduled_time__gte=now - timedelta(minutes=5)).exists()
+            # Check if we already auto-posted recently (in the last 4.5 minutes to account for Celery milliseconds offset)
+            recent_post = Post.objects.filter(channel=channel, scheduled_time__gte=now - timedelta(minutes=4, seconds=30)).exists()
             if not recent_post:
                 image_url = ""
                 
