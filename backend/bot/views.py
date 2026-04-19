@@ -150,8 +150,21 @@ def send_post_to_telegram(post, user):
             resp = requests.post(f"{base_url}/sendMessage",
                 json={'chat_id': channel_id, 'text': post.caption, 'parse_mode': 'HTML'}, timeout=15)
         elif post.post_type == 'photo':
-            resp = requests.post(f"{base_url}/sendPhoto",
-                json={'chat_id': channel_id, 'photo': post.media_url, 'caption': post.caption, 'parse_mode': 'HTML'}, timeout=15)
+            # Extract local path from media_url if it's a local file
+            local_path = None
+            if post.media_url and '/media/' in post.media_url:
+                rel_path = post.media_url.split('/media/')[-1]
+                local_path = os.path.join(settings.BASE_DIR, 'media', rel_path)
+
+            if local_path and os.path.exists(local_path):
+                with open(local_path, 'rb') as f:
+                    resp = requests.post(f"{base_url}/sendPhoto",
+                        data={'chat_id': channel_id, 'caption': post.caption, 'parse_mode': 'HTML'},
+                        files={'photo': f},
+                        timeout=15)
+            else:
+                resp = requests.post(f"{base_url}/sendPhoto",
+                    json={'chat_id': channel_id, 'photo': post.media_url, 'caption': post.caption, 'parse_mode': 'HTML'}, timeout=15)
         else:
             resp = requests.post(f"{base_url}/sendMessage",
                 json={'chat_id': channel_id, 'text': post.caption, 'parse_mode': 'HTML'}, timeout=15)
@@ -235,8 +248,17 @@ def create_educational_receipt(request):
     except ValueError:
         amount = 501000.0
 
-    # Generate the receipt image first
-    image_url = generate_receipt(bank_type, amount, sender_name, receiver_name)
+    # Check for text-only mode
+    if bank_type.lower() == 'text':
+        image_url = None
+        absolute_image_url = None
+        file_path = None
+    else:
+        # Generate the receipt image first
+        image_url, file_path = generate_receipt(bank_type, amount, sender_name, receiver_name)
+        # Build the absolute URL for the image on the server
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        absolute_image_url = f"{site_url.rstrip('/')}{image_url}"
     
     # If no channel specified, return preview only
     if not channel_id or str(channel_id).lower() in ['test', '0', '']:
@@ -246,10 +268,6 @@ def create_educational_receipt(request):
             'post_id': None,
             'message': 'Test receipt generated! (Not queued to any channel)'
         })
-
-    # Build the absolute URL for the image on the server
-    site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
-    absolute_image_url = f"{site_url.rstrip('/')}{image_url}"
 
     # Try to find a registered channel by DB id first
     channel = None
@@ -268,8 +286,8 @@ def create_educational_receipt(request):
         post = Post.objects.create(
             owner=request.user,
             channel=channel,
-            post_type='photo',
-            media_url=absolute_image_url,
+            post_type='text' if bank_type.lower() == 'text' else 'photo',
+            media_url=absolute_image_url if absolute_image_url else "",
             caption=caption,
             status='queued',
             scheduled_time=timezone.now()
@@ -293,11 +311,27 @@ def create_educational_receipt(request):
         if not token:
             return Response({'error': 'No bot token configured. Go to Bot Settings and save your token.'}, status=400)
 
-        resp = requests.post(
-            f"https://api.telegram.org/bot{token}/sendPhoto",
-            json={'chat_id': str(channel_id), 'photo': absolute_image_url, 'caption': caption, 'parse_mode': 'HTML'},
-            timeout=15
-        )
+        if bank_type.lower() == 'text':
+            resp = requests.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={'chat_id': str(channel_id), 'text': caption, 'parse_mode': 'HTML'},
+                timeout=15
+            )
+        else:
+            if file_path and os.path.exists(file_path):
+                with open(file_path, 'rb') as f:
+                    resp = requests.post(
+                        f"https://api.telegram.org/bot{token}/sendPhoto",
+                        data={'chat_id': str(channel_id), 'caption': caption, 'parse_mode': 'HTML'},
+                        files={'photo': f},
+                        timeout=15
+                    )
+            else:
+                resp = requests.post(
+                    f"https://api.telegram.org/bot{token}/sendPhoto",
+                    json={'chat_id': str(channel_id), 'photo': absolute_image_url, 'caption': caption, 'parse_mode': 'HTML'},
+                    timeout=15
+                )
         data = resp.json()
         if data.get('ok'):
             return Response({'success': True, 'image_url': image_url, 'message': 'Receipt sent to Telegram!'})

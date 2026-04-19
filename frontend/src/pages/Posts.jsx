@@ -50,6 +50,7 @@ export default function Posts() {
                         <label>Bank Template</label>
                         <select value={formData.bank_type} onChange={(e) => setFormData({...formData, bank_type: e.target.value})}>
                             <option value="random">⭐ SURPRISE ME (Random)</option>
+                            <option value="text">📝 TEXT ONLY (No Image)</option>
                             <option value="moniepoint">Moniepoint (Dark Blue)</option>
                             <option value="opay">OPay (Clean Green)</option>
                             <option value="kongapay">KongaPay (Pink Table)</option>

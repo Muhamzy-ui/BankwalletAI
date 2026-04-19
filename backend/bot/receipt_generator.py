@@ -203,30 +203,80 @@ BANK_GENERATORS = {
 
 ALL_BANKS = list(BANK_GENERATORS.keys())
 
+# Bank name to file prefix mapping for real template lookup
+BANK_PREFIXES = {
+    "vfd": ["vfd", "raven", "beststar"],
+    "sparkle": ["sparkle"],
+    "kongapay": ["kongapay", "konga"],
+    "moniepoint": ["moniepoint"],
+    "palmpay": ["palmpay"],
+    "opay": ["opay"],
+    "kuda": ["kuda"],
+    "gtbank": ["gt"],
+    "access": ["access", "accessbank"],
+    "wema": ["wema"],
+    "paga": ["paga"],
+}
+
+def _pick_bank_template(bank_type, template_dir, media_dir):
+    """Pick a real template image matching the given bank name."""
+    os.makedirs(media_dir, exist_ok=True)
+    bank_key = bank_type.lower().replace(" ", "")
+    prefixes = BANK_PREFIXES.get(bank_key, [bank_key])
+
+    candidates = []
+    for prefix in prefixes:
+        for ext in ['*.jpeg', '*.jpg', '*.png']:
+            candidates.extend(glob.glob(os.path.join(template_dir, f"{prefix}*{ext[1:]}*")))
+            candidates.extend(glob.glob(os.path.join(template_dir, f"*{prefix}*{ext[1:]}")))
+
+    # Remove duplicates
+    candidates = list(set(candidates))
+
+    if not candidates:
+        # Fall back to any template
+        return _sendlikethis_fallback(template_dir, media_dir), None
+
+    chosen = random.choice(candidates)
+    filename = f"receipt_{bank_key}_{_rand_txn_id(10)}{os.path.splitext(chosen)[1]}"
+    dest = os.path.join(media_dir, filename)
+    shutil.copy(chosen, dest)
+    return f"/media/receipts/{filename}", dest
+
+
 def generate_receipt(bank_type=None, amount=None, sender_name=None, receiver_name=None):
     media_dir = os.path.join(settings.BASE_DIR, "media", "receipts")
     os.makedirs(media_dir, exist_ok=True)
     template_dir = os.path.join(settings.BASE_DIR, "media", "templates")
 
-    # In production (Render), Playwright/Chrome can't run without root. 
-    # Always use real template photos for speed and reliability.
+    # In production (Render), Playwright/Chrome can't run without root.
+    # Use real template photos instantly - fast and authentic!
     is_production = bool(os.environ.get('DATABASE_URL'))
 
     if is_production:
-        # Use real templates 100% of the time - instant, no Playwright needed!
-        url = _sendlikethis_fallback(template_dir, media_dir)
-        if url:
-            return url
+        if not bank_type or bank_type.lower() in ("random", ""):
+            # Pick any template
+            url = _sendlikethis_fallback(template_dir, media_dir)
+            file_path = os.path.join(settings.BASE_DIR, url.lstrip('/')) if url else None
+            return url, file_path
+        else:
+            # Pick a template matching the selected bank
+            url, file_path = _pick_bank_template(bank_type, template_dir, media_dir)
+            return url, file_path
 
     # Development mode: try HTML generation with optional sendlikethis mix
     use_sendlikethis = random.random() < 0.40
     if use_sendlikethis:
         url = _handle_sendlikethis(template_dir, media_dir)
-        if url: return url
+        if url:
+            file_path = os.path.join(settings.BASE_DIR, url.lstrip('/'))
+            return url, file_path
 
     if not bank_type or bank_type.lower() in ("random", ""):
         bank_type = random.choice(ALL_BANKS)
 
     bank_type = bank_type.lower().replace(" ", "")
     gen_fn = BANK_GENERATORS.get(bank_type, _gen_opay)
-    return gen_fn()
+    url = gen_fn()
+    file_path = os.path.join(settings.BASE_DIR, url.lstrip('/')) if url else None
+    return url, file_path
