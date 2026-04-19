@@ -181,13 +181,14 @@ def send_post_to_telegram(post, user):
                 rel_path = post.media_url.split('/media/')[-1]
                 local_path = os.path.join(settings.BASE_DIR, 'media', rel_path)
 
-            if local_path and os.path.exists(local_path):
+            if local_path and os.path.exists(local_path) and os.path.getsize(local_path) > 0:
                 with open(local_path, 'rb') as f:
                     resp = requests.post(f"{base_url}/sendPhoto",
                         data={'chat_id': channel_id, 'caption': post.caption, 'parse_mode': 'HTML'},
                         files={'photo': f},
                         timeout=15)
             else:
+                # File missing/empty (Render restart wiped it) → send via URL directly
                 resp = requests.post(f"{base_url}/sendPhoto",
                     json={'chat_id': channel_id, 'photo': post.media_url, 'caption': post.caption, 'parse_mode': 'HTML'}, timeout=15)
         else:
