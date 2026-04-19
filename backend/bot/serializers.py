@@ -23,13 +23,17 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class ScheduleWindowSerializer(serializers.ModelSerializer):
     day_name = serializers.SerializerMethodField()
+    day_of_week = serializers.IntegerField(min_value=0, max_value=7)
     class Meta:
         model = ScheduleWindow
         fields = '__all__'
 
     def get_day_name(self, obj):
-        days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
-        return days[obj.day_of_week]
+        days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday','Everyday']
+        idx = obj.day_of_week
+        if 0 <= idx < len(days):
+            return days[idx]
+        return 'Unknown'
 
 
 class TelegramChannelSerializer(serializers.ModelSerializer):

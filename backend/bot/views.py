@@ -61,18 +61,57 @@ class ScheduleWindowViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         channel_id_or_all = request.data.get('channel')
+        day_of_week = request.data.get('day_of_week', 7)
+        start_time = request.data.get('start_time', '09:00')
+        end_time = request.data.get('end_time', '23:59')
+
+        try:
+            day_of_week = int(day_of_week)
+            if not (0 <= day_of_week <= 7):
+                return Response({'error': 'Day must be 0 (Mon) to 7 (Everyday).'}, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, TypeError):
+            return Response({'error': 'Invalid day_of_week value.'}, status=status.HTTP_400_BAD_REQUEST)
+
         if channel_id_or_all == 'all':
-            channels = TelegramChannel.objects.filter(owner=request.user)
-            created_instances = []
+            channels = TelegramChannel.objects.filter(owner=request.user, is_active=True)
+            if not channels.exists():
+                return Response({'error': 'No channels found. Please add a Telegram channel first.'}, status=status.HTTP_400_BAD_REQUEST)
+            created_count = 0
             for ch in channels:
-                data = request.data.copy()
-                data['channel'] = ch.id
-                serializer = self.get_serializer(data=data)
-                if serializer.is_valid():
-                    serializer.save()
-                    created_instances.append(serializer.data)
-            return Response(created_instances, status=status.HTTP_201_CREATED)
-        return super().create(request, *args, **kwargs)
+                obj, created = ScheduleWindow.objects.get_or_create(
+                    channel=ch,
+                    day_of_week=day_of_week,
+                    start_time=start_time,
+                    defaults={'end_time': end_time, 'is_active': True}
+                )
+                if not created:
+                    # Window exists — update end_time in case user changed it
+                    obj.end_time = end_time
+                    obj.is_active = True
+                    obj.save()
+                created_count += 1
+            return Response({'message': f'Timer applied to {created_count} channel(s).'}, status=status.HTTP_201_CREATED)
+
+        # Single channel path
+        try:
+            ch = TelegramChannel.objects.get(id=int(channel_id_or_all), owner=request.user)
+        except (TelegramChannel.DoesNotExist, ValueError, TypeError):
+            return Response({'error': 'Channel not found.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        obj, created = ScheduleWindow.objects.get_or_create(
+            channel=ch,
+            day_of_week=day_of_week,
+            start_time=start_time,
+            defaults={'end_time': end_time, 'is_active': True}
+        )
+        if not created:
+            obj.end_time = end_time
+            obj.is_active = True
+            obj.save()
+
+        serializer = self.get_serializer(obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 
 class CaptionTemplateViewSet(viewsets.ModelViewSet):

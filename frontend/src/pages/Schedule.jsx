@@ -48,7 +48,8 @@ export default function Schedule() {
             fetchData();
         } catch (err) {
             console.error(err);
-            alert('Failed to add time window. Ensure times do not overlap illegally.');
+            const msg = err?.response?.data?.error || err?.response?.data?.detail || 'Failed to add time window. Check that you have at least one channel connected.';
+            alert(msg);
         }
         setSubmitting(false);
     };
