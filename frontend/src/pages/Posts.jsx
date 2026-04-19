@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import client from '../api/client';
 
 export default function Posts() {
+    const [searchParams] = useSearchParams();
     const [status, setStatus] = useState('');
     const [formData, setFormData] = useState({ 
-        channel_id: '', 
+        channel_id: searchParams.get('channel') || '', 
         bank_type: 'moniepoint', 
         amount: 850000,
         caption: ''
