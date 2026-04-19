@@ -188,9 +188,16 @@ def send_post_to_telegram(post, user):
                         files={'photo': f},
                         timeout=15)
             else:
-                # File missing/empty (Render restart wiped it) → send via URL directly
+                # File missing or using absolute Cloudinary URL.
+                # If it's a relative local URL like /media/..., make it absolute for Telegram
+                photo_url = post.media_url
+                if photo_url and photo_url.startswith('/'):
+                    # ensure absolute URL
+                    site_base = getattr(settings, 'SITE_URL', 'https://bankwallet-remote.onrender.com').rstrip('/')
+                    photo_url = f"{site_base}{photo_url}"
+
                 resp = requests.post(f"{base_url}/sendPhoto",
-                    json={'chat_id': channel_id, 'photo': post.media_url, 'caption': post.caption, 'parse_mode': 'HTML'}, timeout=15)
+                    json={'chat_id': channel_id, 'photo': photo_url, 'caption': post.caption, 'parse_mode': 'HTML'}, timeout=15)
         else:
             resp = requests.post(f"{base_url}/sendMessage",
                 json={'chat_id': channel_id, 'text': post.caption, 'parse_mode': 'HTML'}, timeout=15)
