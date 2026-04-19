@@ -291,6 +291,9 @@ def create_educational_receipt(request):
         image_url, file_path = generate_receipt(bank_type, amount, sender_name, receiver_name)
         if not image_url:
             return Response({'success': False, 'error': f'No Cloudinary templates found for {bank_type}. Please upload a template in Settings.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if image_url and image_url.startswith('EXCEPTION:'):
+            return Response({'success': False, 'error': f'Generator crashed: {image_url}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Build the absolute URL for the image on the server
         site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')

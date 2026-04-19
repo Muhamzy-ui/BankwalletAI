@@ -179,7 +179,7 @@ def _sendlikethis_fallback(template_dir, media_dir):
             chosen = random.choice(db_templates)
             return chosen.image.url
     except Exception as e:
-        print(f"Exception in _sendlikethis_fallback: {e}")
+        return f"EXCEPTION: {e}"
     
     # If no Cloudinary template exists, return nothing
     return None
@@ -231,7 +231,7 @@ def _pick_bank_template(bank_type, template_dir, media_dir):
             chosen = random.choice(db_templates)
             return chosen.image.url, None
     except Exception as e:
-        print(f"Exception in _pick_bank_template: {e}")
+        return f"EXCEPTION: {e}", None
         
     return _sendlikethis_fallback(template_dir, media_dir), None
 
