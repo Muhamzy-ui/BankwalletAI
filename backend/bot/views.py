@@ -276,10 +276,10 @@ def create_educational_receipt(request):
 
     try:
         amount = float(amount)
-        if amount <= 500000:
-            amount = 501000.0
+        if amount <= 96000:
+            amount = 96000.0
     except ValueError:
-        amount = 501000.0
+        amount = 96000.0
 
     # Check for text-only mode
     if bank_type.lower() == 'text':
@@ -289,9 +289,15 @@ def create_educational_receipt(request):
     else:
         # Generate the receipt image first
         image_url, file_path = generate_receipt(bank_type, amount, sender_name, receiver_name)
+        if not image_url:
+            return Response({'success': False, 'error': f'No Cloudinary templates found for {bank_type}. Please upload a template in Settings.'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Build the absolute URL for the image on the server
         site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
-        absolute_image_url = f"{site_url.rstrip('/')}{image_url}"
+        if not image_url.startswith('http'):
+            absolute_image_url = f"{site_url.rstrip('/')}{image_url}"
+        else:
+            absolute_image_url = image_url
     
     # If no channel specified, return preview only
     if not channel_id or str(channel_id).lower() in ['test', '0', '']:
