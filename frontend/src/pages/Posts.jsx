@@ -41,13 +41,17 @@ export default function Posts() {
                 <div className="glass-panel" style={{ flex: '1', minWidth: '300px', maxWidth: '500px' }}>
                     <p style={{ color: 'var(--text-muted)', marginTop: 0 }}>Generate authentic receipt mockups and instantly send them to your Telegram channels!</p>
                     <form onSubmit={handleGenerate}>
-                        <label>Target (Channel ID or your personal Telegram ID)</label>
+                        <label>Telegram Channel ID or Personal Chat ID</label>
                         <input 
                             type="text" 
                             value={formData.channel_id} 
                             onChange={(e) => setFormData({...formData, channel_id: e.target.value})} 
-                            placeholder="e.g. -1001234567890 or leave empty to preview only"
+                            placeholder="e.g. -100 1234567890 (for channels)"
                         />
+                        <p style={{ fontSize: '0.78rem', color: 'orange', marginTop: '5px', marginBottom: '0' }}>
+                            ⚠️ Channel IDs must start with <strong>-100</strong> (e.g. <code>-1001234567890</code>). 
+                            Your bot must also be added as an <strong>Admin</strong> in the channel.
+                        </p>
                         
                         <label>Bank Template</label>
                         <select value={formData.bank_type} onChange={(e) => setFormData({...formData, bank_type: e.target.value})}>
