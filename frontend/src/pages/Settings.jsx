@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import client from '../api/client';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Settings() {
     const [settings, setSettings] = useState({
         bot_token: '',
-        anthropic_api_key: '',
-        auto_caption_enabled: true,
-        auto_caption_prompt: '',
         timezone: 'Africa/Lagos'
     });
     const [status, setStatus] = useState('');
     const [loading, setLoading] = useState(true);
+    const [showToken, setShowToken] = useState(false);
 
     useEffect(() => {
         client.get('settings/')
@@ -49,45 +48,36 @@ export default function Settings() {
                         Paste your Telegram Bot Token from @BotFather here. This is required for the platform to send receipts to your channels.
                     </p>
                     <label>Bot Token</label>
-                    <input 
-                        type="password" 
-                        value={settings.bot_token} 
-                        onChange={(e) => setSettings({...settings, bot_token: e.target.value})}
-                        placeholder="123456789:ABCDefghi..."
-                    />
-
-                    <h3 style={{ marginTop: '40px' }}>🧠 AI Caption Generator</h3>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '15px' }}>
-                        Connect Claude AI to automatically generate rich, context-aware captions for your receipts.
-                    </p>
-                    <label>Anthropic API Key (Claude)</label>
-                    <input 
-                        type="password" 
-                        value={settings.anthropic_api_key} 
-                        onChange={(e) => setSettings({...settings, anthropic_api_key: e.target.value})}
-                        placeholder="sk-ant-..."
-                    />
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', cursor: 'pointer' }}>
+                    <div style={{ position: 'relative' }}>
                         <input 
-                            type="checkbox" 
-                            checked={settings.auto_caption_enabled}
-                            onChange={(e) => setSettings({...settings, auto_caption_enabled: e.target.checked})}
-                            style={{ width: 'auto', marginBottom: 0 }}
+                            type={showToken ? "text" : "password"} 
+                            value={settings.bot_token} 
+                            onChange={(e) => setSettings({...settings, bot_token: e.target.value})}
+                            placeholder="123456789:ABCDefghi..."
+                            style={{ width: '100%', paddingRight: '45px' }}
                         />
-                        Enable AI Auto-Captions
-                    </label>
+                        <button 
+                            type="button"
+                            onClick={() => setShowToken(!showToken)}
+                            style={{ 
+                                position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', 
+                                background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' 
+                            }}>
+                            {showToken ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
+                    </div>
 
-                    {settings.auto_caption_enabled && (
-                        <div style={{ marginTop: '15px' }}>
-                            <label>AI Prompt Prompt Context</label>
-                            <textarea 
-                                value={settings.auto_caption_prompt}
-                                onChange={(e) => setSettings({...settings, auto_caption_prompt: e.target.value})}
-                                style={{ height: '80px' }}
-                            />
-                        </div>
-                    )}
+                    <h3 style={{ marginTop: '40px' }}>🌍 Global Configuration</h3>
+                    <label>Timezone (For Smart Timers)</label>
+                    <select 
+                        value={settings.timezone}
+                        onChange={(e) => setSettings({...settings, timezone: e.target.value})}
+                    >
+                        <option value="Africa/Lagos">Africa/Lagos (WAT)</option>
+                        <option value="Europe/London">Europe/London (GMT/BST)</option>
+                        <option value="America/New_York">America/New_York (EST/EDT)</option>
+                        <option value="UTC">UTC Standard</option>
+                    </select>
 
                     <div style={{ marginTop: '40px', display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <button type="submit" className="btn">Save Configuration</button>

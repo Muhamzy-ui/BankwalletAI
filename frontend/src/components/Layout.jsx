@@ -87,7 +87,6 @@ export default function Layout() {
                     <Link to="/posts" onClick={closeMenu} style={getLinkStyle('/posts')}><ImageIcon size={20}/> Generator</Link>
                     <Link to="/mapper" onClick={closeMenu} style={getLinkStyle('/mapper')}><Target size={20}/> Automation Mapper</Link>
                     <Link to="/schedule" onClick={closeMenu} style={getLinkStyle('/schedule')}><Calendar size={20}/> Smart Timers</Link>
-                    <Link to="/captions" onClick={closeMenu} style={getLinkStyle('/captions')}><MessageSquareText size={20}/> AI Captions</Link>
                     <Link to="/settings" onClick={closeMenu} style={getLinkStyle('/settings')}><SettingsIcon size={20}/> Bot Settings</Link>
                 </nav>
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Radio, Lock, User } from 'lucide-react';
+import { Radio, Lock, User, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
     const [username, setUsername] = useState('');
@@ -8,6 +8,7 @@ export default function Login() {
     const { login } = useAuth();
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPass, setShowPass] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,7 +38,23 @@ export default function Login() {
                     
                     <div style={{ position: 'relative' }}>
                         <Lock size={18} style={{ position: 'absolute', left: '15px', top: '16px', color: 'var(--text-muted)' }} />
-                        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required style={{ paddingLeft: '45px' }} />
+                        <input 
+                            type={showPass ? "text" : "password"} 
+                            placeholder="Password" 
+                            value={password} 
+                            onChange={e => setPassword(e.target.value)} 
+                            required 
+                            style={{ paddingLeft: '45px', paddingRight: '45px', width: '100%', boxSizing: 'border-box' }} 
+                        />
+                        <button 
+                            type="button"
+                            onClick={() => setShowPass(!showPass)}
+                            style={{ 
+                                position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', 
+                                background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' 
+                            }}>
+                            {showPass ? <EyeOff size={20} /> : <Eye size={20} />}
+                        </button>
                     </div>
                     
                     <button type="submit" className="btn" style={{ width: '100%', marginTop: '10px', height: '50px', fontSize: '1.1rem' }}>
