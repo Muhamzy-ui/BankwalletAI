@@ -175,10 +175,11 @@ def send_post_to_telegram(post, user):
             resp = requests.post(f"{base_url}/sendMessage",
                 json={'chat_id': channel_id, 'text': post.caption, 'parse_mode': 'HTML'}, timeout=15)
         elif post.post_type == 'photo':
-            # Extract local path from media_url if it's a local file
+            media_url = post.media_url or ''
+            # Only try local file if it's NOT an external URL
             local_path = None
-            if post.media_url and '/media/' in post.media_url:
-                rel_path = post.media_url.split('/media/')[-1]
+            if media_url and not media_url.startswith('http') and '/media/' in media_url:
+                rel_path = media_url.split('/media/')[-1]
                 local_path = os.path.join(settings.BASE_DIR, 'media', rel_path)
 
             if local_path and os.path.exists(local_path) and os.path.getsize(local_path) > 0:
@@ -186,18 +187,17 @@ def send_post_to_telegram(post, user):
                     resp = requests.post(f"{base_url}/sendPhoto",
                         data={'chat_id': channel_id, 'caption': post.caption, 'parse_mode': 'HTML'},
                         files={'photo': f},
-                        timeout=15)
+                        timeout=30)
             else:
-                # File missing or using absolute Cloudinary URL.
-                # If it's a relative local URL like /media/..., make it absolute for Telegram
-                photo_url = post.media_url
+                # Use URL directly (Cloudinary or absolute URL)
+                photo_url = media_url
                 if photo_url and photo_url.startswith('/'):
-                    # ensure absolute URL
-                    site_base = getattr(settings, 'SITE_URL', 'https://bankwallet-remote.onrender.com').rstrip('/')
+                    site_base = getattr(settings, 'SITE_URL', 'https://bankwalletai.onrender.com').rstrip('/')
                     photo_url = f"{site_base}{photo_url}"
 
+                print(f"[DEBUG] Sending photo URL to Telegram: {photo_url[:80]}...")
                 resp = requests.post(f"{base_url}/sendPhoto",
-                    json={'chat_id': channel_id, 'photo': photo_url, 'caption': post.caption, 'parse_mode': 'HTML'}, timeout=15)
+                    json={'chat_id': channel_id, 'photo': photo_url, 'caption': post.caption, 'parse_mode': 'HTML'}, timeout=30)
         else:
             resp = requests.post(f"{base_url}/sendMessage",
                 json={'chat_id': channel_id, 'text': post.caption, 'parse_mode': 'HTML'}, timeout=15)
