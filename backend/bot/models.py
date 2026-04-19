@@ -18,7 +18,7 @@ class TelegramChannel(models.Model):
 
 
 class ScheduleWindow(models.Model):
-    DAY_CHOICES = [(i, d) for i, d in enumerate(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'])]
+    DAY_CHOICES = [(i, d) for i, d in enumerate(['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'])] + [(7, 'Everyday')]
     channel = models.ForeignKey(TelegramChannel, on_delete=models.CASCADE, related_name='schedule_windows')
     day_of_week = models.IntegerField(choices=DAY_CHOICES)
     start_time = models.TimeField()
@@ -29,7 +29,7 @@ class ScheduleWindow(models.Model):
         unique_together = ('channel', 'day_of_week', 'start_time')
 
     def __str__(self):
-        days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+        days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun','Everyday']
         return f"{self.channel.name} - {days[self.day_of_week]} {self.start_time}-{self.end_time}"
 
 

@@ -23,7 +23,11 @@ def is_within_schedule(channel):
     current_day = now.weekday()  # 0=Monday
     current_time = now.time()
 
-    windows = channel.schedule_windows.filter(is_active=True, day_of_week=current_day)
+    from django.db.models import Q
+    windows = channel.schedule_windows.filter(
+        Q(day_of_week=current_day) | Q(day_of_week=7),
+        is_active=True
+    )
     if not windows.exists():
         return False  # No window = don't send
 
@@ -128,13 +132,16 @@ def auto_fill_schedule_windows():
     from bot.receipt_generator import generate_receipt
     import random
     import pytz
-    from datetime import timedelta, date
+    from datetime import timedelta
 
     now = timezone.now()
     channels = TelegramChannel.objects.filter(is_active=True).select_related('owner', 'owner__bot_settings')
     
     # Grab all available text captions
     all_captions = list(CaptionTemplate.objects.all())
+
+    images_used_this_run = set()
+    captions_used_this_run = set()
 
     for channel in channels:
         # If the channel is currently inside a schedule window!
@@ -160,22 +167,37 @@ def auto_fill_schedule_windows():
             interval_buffer = timedelta(minutes=interval_minutes) - timedelta(seconds=30)
 
             # Check if we already auto-posted recently within the interval window
-            recent_post = Post.objects.filter(channel=channel, scheduled_time__gte=now - interval_buffer).exists()
+            # Also fetch the LAST post ever sent to this channel so we can avoid repeating it immediately
+            last_post = Post.objects.filter(channel=channel).order_by('-created_at').first()
+            recent_post = last_post and last_post.scheduled_time >= (now - interval_buffer)
+            
             if not recent_post:
                 image_url = ""
                 
                 # Use today's promo images if available, else generate a random receipt
                 if today_images:
-                    chosen_img = random.choice(today_images)
+                    # Filter out images used recently globally, or used previously in this channel
+                    safe_images = [img for img in today_images if img.image.url not in images_used_this_run]
+                    if last_post and last_post.media_url:
+                        safe_images = [img for img in safe_images if img.image.url not in last_post.media_url]
+                    
+                    # Fallback to full list if we filtered out everything
+                    if not safe_images:
+                        safe_images = today_images
+
+                    chosen_img = random.choice(safe_images)
                     image_url = chosen_img.image.url
+                    images_used_this_run.add(image_url)
                 else:
-                    image_url, _ = generate_receipt()  # No args = fully random
+                    # Exclude the exact last receipt from being magically re-generated consecutively
+                    # (This is harder to prevent without deep inspection, but generate_receipt() is fairly random already)
+                    image_url, _ = generate_receipt()
 
                 if not image_url:
                     print(f"Skipping auto-post for channel {channel.channel_id}: No templates available.")
                     continue
 
-                # Build a production URL for receipts (gallery images already have /media/)
+                # Build a production URL for receipts
                 site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
                 if not image_url.startswith('http'):
                     image_url = f"{site_url.rstrip('/')}{image_url}"
@@ -184,20 +206,30 @@ def auto_fill_schedule_windows():
                 extracted_amount = None
                 try:
                     import re
-                    fname = image_url.split('/')[-1]  # just the filename
-                    match = re.search(r'_(\d{4,})', fname)  # find a 4+ digit number
+                    fname = image_url.split('/')[-1]
+                    match = re.search(r'_(\d{4,})', fname)
                     if match:
                         raw = int(match.group(1))
-                        extracted_amount = f"{raw:,}"  # format as 50,000
+                        extracted_amount = f"{raw:,}"
                 except Exception:
                     pass
 
                 # Choose a random saved text caption if available
                 final_caption = ""
                 if all_captions:
-                    chosen = random.choice(all_captions)
+                    # Avoid back-to-back duplicate captions per channel and per cron-run
+                    safe_captions = [cap for cap in all_captions if cap.content not in captions_used_this_run]
+                    if last_post and last_post.caption:
+                        safe_captions = [cap for cap in safe_captions if cap.content != last_post.caption]
+                    
+                    if not safe_captions:
+                        safe_captions = all_captions
+
+                    chosen = random.choice(safe_captions)
                     final_caption = chosen.content
-                    # Replace {amount} placeholder with extracted filename amount
+                    captions_used_this_run.add(final_caption)
+
+                    # Replace {amount} placeholder
                     if extracted_amount:
                         final_caption = final_caption.replace('{amount}', f'₦{extracted_amount}')
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import client from '../api/client';
 import { Calendar, Trash2, Plus, RefreshCw, Clock } from 'lucide-react';
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Everyday'];
 
 export default function Schedule() {
     const [windows, setWindows] = useState([]);
@@ -11,10 +11,10 @@ export default function Schedule() {
     const [submitting, setSubmitting] = useState(false);
     
     const [formData, setFormData] = useState({
-        channel: '',
-        day_of_week: '0',
+        channel: 'all',
+        day_of_week: '7',
         start_time: '09:00',
-        end_time: '17:00'
+        end_time: '23:59'
     });
 
     const fetchData = async () => {
@@ -27,7 +27,7 @@ export default function Schedule() {
             setWindows(winRes.data);
             setChannels(chanRes.data);
             if (chanRes.data.length > 0 && !formData.channel) {
-                setFormData(prev => ({ ...prev, channel: chanRes.data[0].id }));
+                setFormData(prev => ({ ...prev, channel: 'all' }));
             }
         } catch (err) {
             console.error("Failed to fetch schedule data", err);
@@ -92,6 +92,7 @@ export default function Schedule() {
                                     style={{ marginBottom: 0 }}
                                     required
                                 >
+                                    <option value="all">🌍 All Channels</option>
                                     {channels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                                 </select>
                             </div>
@@ -104,7 +105,8 @@ export default function Schedule() {
                                     style={{ marginBottom: 0 }}
                                     required
                                 >
-                                    {DAYS.map((day, idx) => <option key={idx} value={idx}>{day}</option>)}
+                                    <option value="7" style={{ fontWeight: 'bold', color: 'var(--brand)' }}>⭐ Everyday</option>
+                                    {DAYS.slice(0, 7).map((day, idx) => <option key={idx} value={idx}>{day}</option>)}
                                 </select>
                             </div>
 

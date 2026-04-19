@@ -59,6 +59,21 @@ class ScheduleWindowViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return ScheduleWindow.objects.filter(channel__owner=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        channel_id_or_all = request.data.get('channel')
+        if channel_id_or_all == 'all':
+            channels = TelegramChannel.objects.filter(owner=request.user)
+            created_instances = []
+            for ch in channels:
+                data = request.data.copy()
+                data['channel'] = ch.id
+                serializer = self.get_serializer(data=data)
+                if serializer.is_valid():
+                    serializer.save()
+                    created_instances.append(serializer.data)
+            return Response(created_instances, status=status.HTTP_201_CREATED)
+        return super().create(request, *args, **kwargs)
+
 
 class CaptionTemplateViewSet(viewsets.ModelViewSet):
     serializer_class = CaptionTemplateSerializer
