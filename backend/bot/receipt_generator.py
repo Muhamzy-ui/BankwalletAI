@@ -171,7 +171,7 @@ def _gen_opay():
 # ─── Sendlikethis passthrough ─────────────────────────────────────────────────
 
 def _sendlikethis_fallback(template_dir, media_dir):
-    """Pick any template from DB or local disk."""
+    """Pick any template exclusively from Cloudinary DB."""
     try:
         from bot.models import TemplateImage
         db_templates = list(TemplateImage.objects.filter(is_active=True))
@@ -179,29 +179,12 @@ def _sendlikethis_fallback(template_dir, media_dir):
             chosen = random.choice(db_templates)
             return chosen.image.url
     except Exception:
-        pass  # Table may not exist yet — fall through to local files
-
-    # Fallback to local files
-    patterns = [
-        os.path.join(template_dir, "*sendlikethis*.*"),
-        os.path.join(template_dir, "*changethename*.*"),
-    ]
-    candidates = []
-    for p in patterns:
-        candidates.extend(glob.glob(p))
+        pass
     
-    if not candidates:
-        return None
-    
-    chosen = random.choice(candidates)
-    os.makedirs(media_dir, exist_ok=True)
-    filename = f"receipt_fallback_{_rand_txn_id(10)}{os.path.splitext(chosen)[1]}"
-    dest = os.path.join(media_dir, filename)
-    shutil.copy(chosen, dest)
-    return f"/media/receipts/{filename}"
+    # If no Cloudinary template exists, return nothing
+    return None
 
 def _handle_sendlikethis(template_dir, media_dir):
-    # This was the old name, now aliased to the generic fallback
     return _sendlikethis_fallback(template_dir, media_dir)
 
 
@@ -234,11 +217,10 @@ BANK_PREFIXES = {
 }
 
 def _pick_bank_template(bank_type, template_dir, media_dir):
-    """Pick a real template image matching the given bank name from DB or disk."""
+    """Pick a template matching the given bank name exclusively from Cloudinary DB."""
     bank_key = bank_type.lower().replace(" ", "")
     prefixes = BANK_PREFIXES.get(bank_key, [bank_key])
 
-    # 1. Try Database first (guarded - table may not exist yet)
     try:
         from bot.models import TemplateImage
         query = models.Q()
@@ -249,24 +231,9 @@ def _pick_bank_template(bank_type, template_dir, media_dir):
             chosen = random.choice(db_templates)
             return chosen.image.url, None
     except Exception:
-        pass  # Fall through to local disk
-
-    # 2. Try Local Disk
-    candidates = []
-    for prefix in prefixes:
-        for ext in ['*.jpeg', '*.jpg', '*.png']:
-            candidates.extend(glob.glob(os.path.join(template_dir, f"{prefix}*{ext[1:]}*")))
-            candidates.extend(glob.glob(os.path.join(template_dir, f"*{prefix}*{ext[1:]}")))
-
-    candidates = list(set(candidates))
-    if not candidates:
-        return _sendlikethis_fallback(template_dir, media_dir), None
-
-    chosen = random.choice(candidates)
-    filename = f"receipt_{bank_key}_{_rand_txn_id(10)}{os.path.splitext(chosen)[1]}"
-    dest = os.path.join(media_dir, filename)
-    shutil.copy(chosen, dest)
-    return f"/media/receipts/{filename}", dest
+        pass
+        
+    return _sendlikethis_fallback(template_dir, media_dir), None
 
 
 def generate_receipt(bank_type=None, amount=None, sender_name=None, receiver_name=None):

@@ -23,8 +23,12 @@ export default function Posts() {
             const response = await client.post('bot/generate-receipt/', formData);
             setStatus(response.data.message || '✅ Receipt generated and sent!');
             if (response.data.image_url) {
-                const base = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/').replace('/api/', '');
-                setPreviewImg(`${base}${response.data.image_url}`);
+                if (response.data.image_url.startsWith('http')) {
+                    setPreviewImg(response.data.image_url);
+                } else {
+                    const base = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api/').replace('/api/', '');
+                    setPreviewImg(`${base}${response.data.image_url}`);
+                }
             }
         } catch (error) {
             const errDetail = error.response?.data?.error || error.message;
