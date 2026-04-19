@@ -172,13 +172,16 @@ def _gen_opay():
 
 def _sendlikethis_fallback(template_dir, media_dir):
     """Pick any template from DB or local disk."""
-    from bot.models import TemplateImage
-    db_templates = list(TemplateImage.objects.filter(is_active=True))
-    if db_templates:
-        chosen = random.choice(db_templates)
-        return chosen.image.url
+    try:
+        from bot.models import TemplateImage
+        db_templates = list(TemplateImage.objects.filter(is_active=True))
+        if db_templates:
+            chosen = random.choice(db_templates)
+            return chosen.image.url
+    except Exception:
+        pass  # Table may not exist yet — fall through to local files
 
-    # Fallback to local files if DB is empty
+    # Fallback to local files
     patterns = [
         os.path.join(template_dir, "*sendlikethis*.*"),
         os.path.join(template_dir, "*changethename*.*"),
@@ -232,21 +235,23 @@ BANK_PREFIXES = {
 
 def _pick_bank_template(bank_type, template_dir, media_dir):
     """Pick a real template image matching the given bank name from DB or disk."""
-    from bot.models import TemplateImage
     bank_key = bank_type.lower().replace(" ", "")
     prefixes = BANK_PREFIXES.get(bank_key, [bank_key])
 
-    # 1. Try Database first
-    query = models.Q()
-    for prefix in prefixes:
-        query |= models.Q(bank_name__icontains=prefix) | models.Q(image__icontains=prefix)
-    
-    db_templates = list(TemplateImage.objects.filter(query, is_active=True))
-    if db_templates:
-        chosen = random.choice(db_templates)
-        return chosen.image.url, None  # Cloudinary URLs don't need local file path for sending
+    # 1. Try Database first (guarded - table may not exist yet)
+    try:
+        from bot.models import TemplateImage
+        query = models.Q()
+        for prefix in prefixes:
+            query |= models.Q(bank_name__icontains=prefix) | models.Q(image__icontains=prefix)
+        db_templates = list(TemplateImage.objects.filter(query, is_active=True))
+        if db_templates:
+            chosen = random.choice(db_templates)
+            return chosen.image.url, None
+    except Exception:
+        pass  # Fall through to local disk
 
-    # 2. Try Local Disk second
+    # 2. Try Local Disk
     candidates = []
     for prefix in prefixes:
         for ext in ['*.jpeg', '*.jpg', '*.png']:
