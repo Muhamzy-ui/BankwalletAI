@@ -224,7 +224,7 @@ def create_educational_receipt(request):
     bank_type = request.data.get('bank_type', 'opay')
     amount = request.data.get('amount', 501000.0)
     channel_id = request.data.get('channel_id')
-    
+    caption = request.data.get('caption', '')   # User's custom message
     sender_name = request.data.get('sender_name')
     receiver_name = request.data.get('receiver_name')
 
@@ -270,7 +270,7 @@ def create_educational_receipt(request):
             channel=channel,
             post_type='photo',
             media_url=absolute_image_url,
-            caption="",
+            caption=caption,
             status='queued',
             scheduled_time=timezone.now()
         )
@@ -295,7 +295,7 @@ def create_educational_receipt(request):
 
         resp = requests.post(
             f"https://api.telegram.org/bot{token}/sendPhoto",
-            json={'chat_id': str(channel_id), 'photo': absolute_image_url, 'caption': ''},
+            json={'chat_id': str(channel_id), 'photo': absolute_image_url, 'caption': caption, 'parse_mode': 'HTML'},
             timeout=15
         )
         data = resp.json()

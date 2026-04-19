@@ -208,6 +208,17 @@ def generate_receipt(bank_type=None, amount=None, sender_name=None, receiver_nam
     os.makedirs(media_dir, exist_ok=True)
     template_dir = os.path.join(settings.BASE_DIR, "media", "templates")
 
+    # In production (Render), Playwright/Chrome can't run without root. 
+    # Always use real template photos for speed and reliability.
+    is_production = bool(os.environ.get('DATABASE_URL'))
+
+    if is_production:
+        # Use real templates 100% of the time - instant, no Playwright needed!
+        url = _sendlikethis_fallback(template_dir, media_dir)
+        if url:
+            return url
+
+    # Development mode: try HTML generation with optional sendlikethis mix
     use_sendlikethis = random.random() < 0.40
     if use_sendlikethis:
         url = _handle_sendlikethis(template_dir, media_dir)
