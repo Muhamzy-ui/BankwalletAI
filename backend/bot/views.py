@@ -314,12 +314,12 @@ def create_educational_receipt(request):
     # Try to find a registered channel by DB id first
     channel = None
     try:
-        channel = TelegramChannel.objects.get(id=int(channel_id), owner=request.user)
+        channel = TelegramChannel.objects.get(id=int(channel_id.strip()), owner=request.user)
     except (TelegramChannel.DoesNotExist, ValueError):
         # Could be a raw Telegram Chat ID (e.g. 8342713750 or -100123456789)
         # Try to find by channel_id field
         try:
-            channel = TelegramChannel.objects.get(channel_id=str(channel_id), owner=request.user)
+            channel = TelegramChannel.objects.get(channel_id=str(channel_id).strip(), owner=request.user)
         except TelegramChannel.DoesNotExist:
             channel = None
 
@@ -401,7 +401,7 @@ def create_educational_receipt(request):
 @permission_classes([IsAuthenticated])
 def test_telegram_connection(request):
     """Diagnostic endpoint: test bot token + channel access directly"""
-    channel_id = request.data.get('channel_id', '')
+    channel_id = str(request.data.get('channel_id', '')).strip()
     try:
         bot_settings = request.user.bot_settings
         token = bot_settings.bot_token or settings.TELEGRAM_BOT_TOKEN
