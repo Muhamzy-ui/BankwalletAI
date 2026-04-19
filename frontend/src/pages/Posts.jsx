@@ -13,6 +13,22 @@ export default function Posts() {
     });
     const [previewImg, setPreviewImg] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [testResult, setTestResult] = useState(null);
+    const [testing, setTesting] = useState(false);
+
+    const handleTestConnection = async () => {
+        if (!formData.channel_id) { setTestResult({ error: 'Enter a channel ID first.' }); return; }
+        setTesting(true);
+        setTestResult(null);
+        try {
+            const res = await client.post('bot/test-telegram/', { channel_id: formData.channel_id });
+            setTestResult(res.data);
+        } catch (err) {
+            setTestResult(err.response?.data || { error: err.message });
+        } finally {
+            setTesting(false);
+        }
+    };
 
     const handleGenerate = async (e) => {
         e.preventDefault();
@@ -52,10 +68,27 @@ export default function Posts() {
                             onChange={(e) => setFormData({...formData, channel_id: e.target.value})} 
                             placeholder="e.g. -100 1234567890 (for channels)"
                         />
-                        <p style={{ fontSize: '0.78rem', color: 'orange', marginTop: '5px', marginBottom: '0' }}>
+                        <p style={{ fontSize: '0.78rem', color: 'orange', marginTop: '5px', marginBottom: '10px' }}>
                             ⚠️ Channel IDs must start with <strong>-100</strong> (e.g. <code>-1001234567890</code>). 
                             Your bot must also be added as an <strong>Admin</strong> in the channel.
                         </p>
+                        <button type="button" onClick={handleTestConnection} disabled={testing}
+                            style={{ width: '100%', marginBottom: '15px', background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.4)', color: '#a5b4fc', padding: '8px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                            {testing ? '🔍 Testing...' : '🔍 Test Channel Connection'}
+                        </button>
+                        {testResult && (
+                            <div style={{ padding: '10px 14px', borderRadius: '8px', marginBottom: '15px', fontSize: '0.8rem', lineHeight: '1.6',
+                                background: testResult.channel_found ? 'rgba(21,209,134,0.08)' : 'rgba(227,25,95,0.08)',
+                                border: `1px solid ${testResult.channel_found ? 'rgba(21,209,134,0.3)' : 'rgba(227,25,95,0.3)'}`,
+                                color: testResult.channel_found ? 'var(--success)' : 'var(--danger)'
+                            }}>
+                                {testResult.error && <div>❌ {testResult.error}</div>}
+                                {testResult.bot_username && <div>🤖 Bot: @{testResult.bot_username}</div>}
+                                {testResult.channel_found === true && <div>✅ Channel found: <strong>{testResult.channel_title}</strong></div>}
+                                {testResult.channel_found === false && <div>❌ Channel error: {testResult.channel_error}</div>}
+                                {testResult.bot_status_in_channel && <div>👤 Bot status: <strong>{testResult.bot_status_in_channel}</strong></div>}
+                            </div>
+                        )}
                         
                         <label>Bank Template</label>
                         <select value={formData.bank_type} onChange={(e) => setFormData({...formData, bank_type: e.target.value})}>
