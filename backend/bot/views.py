@@ -294,6 +294,14 @@ def create_educational_receipt(request):
             channel = None
 
     if channel:
+        # If the user left caption blank, maybe use one from the pool
+        import random
+        if not caption and random.random() < 0.5:
+            from .models import CaptionTemplate
+            pool = list(CaptionTemplate.objects.filter(owner=request.user))
+            if pool:
+                caption = random.choice(pool).content
+
         # Post via a registered channel
         post = Post.objects.create(
             owner=request.user,
@@ -322,6 +330,14 @@ def create_educational_receipt(request):
 
         if not token:
             return Response({'error': 'No bot token configured. Go to Bot Settings and save your token.'}, status=400)
+
+        # If the user left caption blank, maybe use one from the pool
+        import random
+        if not caption and random.random() < 0.5:
+            from .models import CaptionTemplate
+            pool = list(CaptionTemplate.objects.filter(owner=request.user))
+            if pool:
+                caption = random.choice(pool).content
 
         if bank_type.lower() == 'text':
             resp = requests.post(

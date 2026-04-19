@@ -7,9 +7,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+import pytz
+
 def is_within_schedule(channel):
     """Check if current time is within any active schedule window for this channel"""
-    now = timezone.localtime(timezone.now())
+    user_tz_str = 'Africa/Lagos'
+    if hasattr(channel.owner, 'bot_settings') and channel.owner.bot_settings.timezone:
+        user_tz_str = channel.owner.bot_settings.timezone
+    
+    try:
+        tz = pytz.timezone(user_tz_str)
+    except pytz.UnknownTimeZoneError:
+        tz = pytz.UTC
+    now = timezone.now().astimezone(tz)
     current_day = now.weekday()  # 0=Monday
     current_time = now.time()
 
@@ -117,16 +127,12 @@ def auto_fill_schedule_windows():
     from bot.models import TelegramChannel, Post, CustomGalleryImage, CaptionTemplate
     from bot.receipt_generator import generate_receipt
     import random
+    import pytz
     from datetime import timedelta, date
 
     now = timezone.now()
-    today_start = timezone.make_aware(timezone.datetime.combine(date.today(), timezone.datetime.min.time()))
-    current_day = timezone.localtime(now).weekday()
     
     channels = TelegramChannel.objects.filter(is_active=True)
-    
-    # Check if there are any Custom Gallery Images uploaded TODAY
-    today_images = list(CustomGalleryImage.objects.filter(uploaded_at__gte=today_start, is_active=True))
     
     # Grab all available text captions
     all_captions = list(CaptionTemplate.objects.all())
@@ -134,6 +140,19 @@ def auto_fill_schedule_windows():
     for channel in channels:
         # If the channel is currently inside a schedule window!
         if is_within_schedule(channel):
+            
+            # Recalculate today's images using the channel owner's timezone to ensure "today" is accurate for them
+            user_tz_str = channel.owner.bot_settings.timezone if hasattr(channel.owner, 'bot_settings') else 'Africa/Lagos'
+            try:
+                tz = pytz.timezone(user_tz_str)
+            except pytz.UnknownTimeZoneError:
+                tz = pytz.UTC
+            local_now = now.astimezone(tz)
+            today_start = tz.localize(timezone.datetime.combine(local_now.date(), timezone.datetime.min.time()))
+            
+            # Check if there are any Custom Gallery Images uploaded TODAY
+            today_images = list(CustomGalleryImage.objects.filter(uploaded_at__gte=today_start, is_active=True))
+
             # Check if we already auto-posted recently (in the last 5 minutes)
             recent_post = Post.objects.filter(channel=channel, scheduled_time__gte=now - timedelta(minutes=5)).exists()
             if not recent_post:
