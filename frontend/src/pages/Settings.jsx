@@ -31,6 +31,9 @@ export default function Settings() {
     const [newName, setNewName] = useState('');
     const [renaming, setRenaming] = useState(false);
 
+    // Lightbox / Fullscreen Preview
+    const [selectedPreview, setSelectedPreview] = useState(null);
+
     useEffect(() => {
         client.get('settings/')
             .then(res => {
@@ -199,7 +202,8 @@ export default function Settings() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '15px' }}>
                         {dbTemplates.map(t => (
                             <div key={t.id} style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px', textAlign: 'center' }}>
-                                <img src={t.image} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer' }} onClick={() => window.open(t.image, '_blank')} />
+                                <img src={t.image} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer' }} 
+                                    onClick={() => setSelectedPreview(t.image)} title="Click to enlarge" />
                                 <div style={{ fontSize: '0.75rem', marginTop: '8px', color: 'var(--text-muted)' }}>
                                     <b>{t.bank_name || 'Generic'}</b> ({t.template_type})
                                 </div>
@@ -222,7 +226,8 @@ export default function Settings() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {diskTemplates.map(t => (
                             <div key={t.filename} style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', padding: '8px 15px', borderRadius: '8px' }}>
-                                <img src={t.url} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                                <img src={t.url} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', cursor: 'pointer' }} 
+                                    onClick={() => setSelectedPreview(t.url)} title="Click to enlarge" />
                                 {renamingDiskFile === t.filename ? (
                                     <div style={{ flex: 1, display: 'flex', gap: '5px' }}>
                                         <input value={newName} onChange={e => setNewName(e.target.value)} style={{ padding: '4px 8px', fontSize: '0.8rem' }} />
@@ -241,6 +246,39 @@ export default function Settings() {
                     </div>
                 )}
             </div>
+
+            {/* ── Image Preview Modal (Lightbox) ── */}
+            {selectedPreview && (
+                <div 
+                    onClick={() => setSelectedPreview(null)}
+                    style={{
+                        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+                        background: 'rgba(0,0,0,0.9)', zIndex: 9999, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', cursor: 'zoom-out'
+                    }}
+                >
+                    <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }}>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setSelectedPreview(null); }}
+                            style={{
+                                position: 'absolute', top: '-40px', right: '0', background: 'var(--danger)',
+                                color: 'white', border: 'none', borderRadius: '50%', width: '30px', height: '30px',
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                        >
+                            <X size={20} />
+                        </button>
+                        <img 
+                            src={selectedPreview} 
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: '12px', border: '2px solid rgba(255,255,255,0.1)' }} 
+                        />
+                        <p style={{ textAlign: 'center', marginTop: '15px', color: 'white', fontSize: '14px' }}>
+                            Click anywhere outside the image to close
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
