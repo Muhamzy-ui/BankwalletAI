@@ -16,7 +16,7 @@ from playwright.sync_api import sync_playwright
 # ─── Utility helpers ─────────────────────────────────────────────────────────
 
 def _rand_amount():
-    return random.randint(150000, 4500000) + random.randint(0, 99) / 100
+    return random.randint(96000, 4500000) + random.randint(0, 99) / 100
 
 def _format_amount(amount):
     return f"₦{amount:,.2f}"
