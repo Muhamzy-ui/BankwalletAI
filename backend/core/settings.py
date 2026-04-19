@@ -76,8 +76,5 @@ CLOUDINARY_STORAGE = {
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '713329398677614'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', '6b7mEQNHwSLhXPXxCEwcwwTMllg'),
 }
-
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-# Keep static files locally (whitenoise) but media on Cloudinary
-# MEDIA_URL is already '/media/'
-# django-cloudinary-storage handles prepend if we use MediaCloudinaryStorage
+# Note: DEFAULT_FILE_STORAGE is NOT set globally.
+# Cloudinary storage is applied per-model (TemplateImage, CustomGalleryImage) via the model field's storage= kwarg.

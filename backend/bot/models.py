@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from cloudinary_storage.storage import MediaCloudinaryStorage as cloudinary_storage
 
 
 class TelegramChannel(models.Model):
@@ -47,7 +48,7 @@ class CaptionTemplate(models.Model):
 
 class CustomGalleryImage(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='gallery_images')
-    image = models.ImageField(upload_to="gallery/")
+    image = models.ImageField(upload_to="gallery/", storage=cloudinary_storage())
     uploaded_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
 
@@ -57,7 +58,7 @@ class CustomGalleryImage(models.Model):
 
 class TemplateImage(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='templates')
-    image = models.ImageField(upload_to="templates/")
+    image = models.ImageField(upload_to="templates/", storage=cloudinary_storage())
     bank_name = models.CharField(max_length=100, blank=True)
     template_type = models.CharField(max_length=50, default='changethename', help_text="e.g. changethename or sendlikethis")
     is_active = models.BooleanField(default=True)
